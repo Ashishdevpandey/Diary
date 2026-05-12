@@ -12,6 +12,7 @@ import smtplib
 import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from dotenv import load_dotenv
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
@@ -23,7 +24,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'ink-and-impressions-secret-key-12
 # OTP Store: { email: { 'otp': '123456', 'expiry': timestamp } }
 otp_store = {}
 
-def send_email(target_email, subject, body):
+def send_email(target_email, subject, body, image_filename='Mail.png'):
     sender = os.environ.get('MAIL_USERNAME')
     password = os.environ.get('MAIL_PASSWORD')
     if not sender or not password:
@@ -34,7 +35,22 @@ def send_email(target_email, subject, body):
     msg['From'] = f"Ink & Impressions <{sender}>"
     msg['To'] = target_email
     msg['Subject'] = subject
+    
+    # Attach HTML body
     msg.attach(MIMEText(body, 'html'))
+    
+    # Attach image if it exists
+    image_path = image_filename
+    if os.path.exists(image_path):
+        try:
+            with open(image_path, 'rb') as f:
+                img_data = f.read()
+            img = MIMEImage(img_data)
+            img.add_header('Content-ID', '<mail_header_image>')
+            img.add_header('Content-Disposition', 'inline', filename=image_filename)
+            msg.attach(img)
+        except Exception as img_err:
+            print(f"Failed to attach image {image_filename}: {img_err}")
     
     try:
         # Use Gmail SMTP
@@ -234,6 +250,9 @@ def send_otp():
     subject = f"Your OTP for Ink & Impressions - {purpose.capitalize()}"
     body = f"""
     <div style="font-family: 'Lora', serif; padding: 20px; background: #f7f0df; border: 1px solid #c8a870; border-radius: 10px; color: #2e1f0d;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+        </div>
         <h2 style="color: #6b4c2a;">Ink & Impressions</h2>
         <p>Hello <b>{username}</b>,</p>
         <p>Your One-Time Password (OTP) for <b>{purpose}</b> is:</p>
@@ -337,6 +356,9 @@ def reset_request():
     subject = "Reset Your Password - Ink & Impressions"
     body = f"""
     <div style="font-family: 'Lora', serif; padding: 20px; background: #f7f0df; border: 1px solid #c8a870; border-radius: 10px; color: #2e1f0d;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+        </div>
         <h2 style="color: #6b4c2a;">Ink & Impressions</h2>
         <p>Hello <b>{username}</b>,</p>
         <p>You requested to reset your password. Use the following code:</p>
@@ -348,7 +370,7 @@ def reset_request():
     </div>
     """
     
-    if send_email(email, subject, body):
+    if send_email(email, subject, body, image_filename='change pswd.png'):
         return jsonify({"message": "OTP sent successfully"})
     return jsonify({"error": "Failed to send OTP"}), 500
 
@@ -475,6 +497,9 @@ def _send_farewell_email(email, username):
     subject = "We're sad to see you go 💔 — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      </div>
       <h2 style="color:#6b4c2a;margin-bottom:4px;">Ink & Impressions</h2>
       <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
       <p style="font-size:18px;">Hey <b>{username}</b>,</p>
@@ -489,12 +514,15 @@ def _send_farewell_email(email, username):
       <p style="color:#6b4c2a;font-style:italic;">— The Ink & Impressions Team</p>
     </div>
     """
-    send_email(email, subject, body)
+    send_email(email, subject, body, image_filename='Deletion request.png')
 
 def _send_welcome_back_email(email, username):
     subject = "Welcome back! We knew you'd return 🥹 — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      </div>
       <h2 style="color:#6b4c2a;margin-bottom:4px;">Ink & Impressions</h2>
       <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
       <p style="font-size:20px;">Welcome back, <b>{username}</b>! 🥹</p>
@@ -507,12 +535,15 @@ def _send_welcome_back_email(email, username):
       <p style="color:#6b4c2a;font-style:italic;">— The Ink & Impressions Team</p>
     </div>
     """
-    send_email(email, subject, body)
+    send_email(email, subject, body, image_filename='Welcome back.png')
 
 def _send_deleted_email(email, username):
     subject = "Your account has been deleted — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      </div>
       <h2 style="color:#6b4c2a;margin-bottom:4px;">Ink & Impressions</h2>
       <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
       <p>Dear <b>{username}</b>,</p>
@@ -523,7 +554,7 @@ def _send_deleted_email(email, username):
       <p style="color:#6b4c2a;font-style:italic;">— The Ink & Impressions Team</p>
     </div>
     """
-    send_email(email, subject, body)
+    send_email(email, subject, body, image_filename='Farewell.png')
 
 def run_cleanup():
     """Performs the 14-day grace period cleanup once. 
@@ -601,6 +632,9 @@ def account_delete_request():
     subject = "Confirm Account Deletion — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      </div>
       <h2 style="color:#6b4c2a;">Ink & Impressions</h2>
       <p>Hello <b>{user_data['username']}</b>,</p>
       <p>We received a request to <b>delete your account</b>. If this was you, use the code below:</p>
@@ -609,7 +643,7 @@ def account_delete_request():
       <p style="font-size:12px;color:#a07840;">If you didn't request this, please ignore this email. Your account is safe.</p>
     </div>
     """
-    if send_email(user_data['email'], subject, body):
+    if send_email(user_data['email'], subject, body, image_filename='Deletion request.png'):
         return jsonify({"message": "OTP sent to your email"})
     return jsonify({"error": "Failed to send OTP"}), 500
 
