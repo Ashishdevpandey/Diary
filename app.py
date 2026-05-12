@@ -250,10 +250,10 @@ def send_otp():
     subject = f"Your OTP for Ink & Impressions - {purpose.capitalize()}"
     body = f"""
     <div style="font-family: 'Lora', serif; padding: 20px; background: #f7f0df; border: 1px solid #c8a870; border-radius: 10px; color: #2e1f0d;">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+            <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+            <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
         </div>
-        <h2 style="color: #6b4c2a;">Ink & Impressions</h2>
         <p>Hello <b>{username}</b>,</p>
         <p>Your One-Time Password (OTP) for <b>{purpose}</b> is:</p>
         <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #6b4c2a; margin: 20px 0; text-align: center; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 5px;">
@@ -356,10 +356,10 @@ def reset_request():
     subject = "Reset Your Password - Ink & Impressions"
     body = f"""
     <div style="font-family: 'Lora', serif; padding: 20px; background: #f7f0df; border: 1px solid #c8a870; border-radius: 10px; color: #2e1f0d;">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+            <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+            <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
         </div>
-        <h2 style="color: #6b4c2a;">Ink & Impressions</h2>
         <p>Hello <b>{username}</b>,</p>
         <p>You requested to reset your password. Use the following code:</p>
         <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #6b4c2a; margin: 20px 0; text-align: center; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 5px;">
@@ -497,10 +497,10 @@ def _send_farewell_email(email, username):
     subject = "We're sad to see you go 💔 — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 120px; border-radius: 8px; margin-right: 15px;">
+        <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
       </div>
-      <h2 style="color:#6b4c2a;margin-bottom:4px;">Ink & Impressions</h2>
       <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
       <p style="font-size:18px;">Hey <b>{username}</b>,</p>
       <p>It's heartbreaking to let you go. 💔</p>
@@ -520,10 +520,10 @@ def _send_welcome_back_email(email, username):
     subject = "Welcome back! We knew you'd return 🥹 — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+        <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
       </div>
-      <h2 style="color:#6b4c2a;margin-bottom:4px;">Ink & Impressions</h2>
       <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
       <p style="font-size:20px;">Welcome back, <b>{username}</b>! 🥹</p>
       <p>We never stopped believing you'd return. Your diary, your memories, your words —
@@ -541,10 +541,10 @@ def _send_deleted_email(email, username):
     subject = "Your account has been deleted — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+        <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
       </div>
-      <h2 style="color:#6b4c2a;margin-bottom:4px;">Ink & Impressions</h2>
       <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
       <p>Dear <b>{username}</b>,</p>
       <p>Your account and all associated diary entries have been permanently deleted, as requested.</p>
@@ -632,10 +632,10 @@ def account_delete_request():
     subject = "Confirm Account Deletion — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 150px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 120px; border-radius: 8px; margin-right: 15px;">
+        <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
       </div>
-      <h2 style="color:#6b4c2a;">Ink & Impressions</h2>
       <p>Hello <b>{user_data['username']}</b>,</p>
       <p>We received a request to <b>delete your account</b>. If this was you, use the code below:</p>
       <div style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#6b4c2a;text-align:center;background:rgba(255,255,255,0.5);padding:12px;border-radius:8px;margin:20px 0;">{otp}</div>
