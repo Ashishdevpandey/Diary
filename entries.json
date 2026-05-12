@@ -1,0 +1,29 @@
+{
+    "users": [
+        {
+            "id": 692699,
+            "username": "testuser",
+            "password_hash": "$2b$12$ePRZLq0KlnUun270R0ZBI.cjuI7fsY999AYZolBxUBdrdKiVsO0Ii"
+        },
+        {
+            "id": 406342,
+            "username": "testuser_verify",
+            "email": "jeriya6982@deapad.com",
+            "password_hash": "$2b$12$Mpk9D01DrCDHENlJr/F1MO5MJiqZOHUMYc9of9JqnQeM274sHw/a6"
+        }
+    ],
+    "entries": [
+        {
+            "title": "My Secret Diary",
+            "body": "",
+            "mood": 3,
+            "notes": [],
+            "tags": [],
+            "id": 1778497321246,
+            "date": "2026-05-11",
+            "time": "04:32 PM",
+            "starred": false,
+            "user_id": 692699
+        }
+    ]
+}

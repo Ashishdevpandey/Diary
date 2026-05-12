@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Ink & Impressions — My Diary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Caveat:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div class="overlay auth-overlay open" id="authOverlay">
+  <div class="auth-card" id="loginCard">
+    <div class="auth-header">
+      <span class="auth-icon">🪶</span>
+      <h2>Welcome Back</h2>
+      <p>Continue your journey of thoughts</p>
+    </div>
+    <div class="auth-body">
+      <div class="field-wrap">
+        <label>Username or Email</label>
+        <input type="text" id="loginUser" placeholder="Enter username or email" autocomplete="username"/>
+      </div>
+      <div class="field-wrap">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <div id="loginError" class="auth-error"></div>
+      <button class="auth-btn" onclick="login()">Sign In</button>
+      <div class="auth-footer" style="margin-top: 5px;">
+        <a href="javascript:void(0)" onclick="showReset()">Forgot password?</a>
+      </div>
+      <div class="auth-footer">
+        New here? <a href="javascript:void(0)" onclick="showSignup()">Create an account</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-card" id="signupCard" style="display:none;">
+    <div class="auth-header">
+      <span class="auth-icon">✨</span>
+      <h2>Create Account</h2>
+      <p>Start your digital diary today</p>
+    </div>
+    <div class="auth-body">
+      <div id="signupStep1">
+        <div class="field-wrap">
+          <label>Username</label>
+          <input type="text" id="signupUser" placeholder="Pick a username" autocomplete="username"/>
+        </div>
+        <div class="field-wrap">
+          <label>Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="field-wrap">
+          <label>Password</label>
+          <input type="password" id="signupPass" placeholder="Create a password" autocomplete="new-password"/>
+        </div>
+        <div id="signupError" class="auth-error"></div>
+        <button class="auth-btn" id="btnSendSignupOtp" onclick="sendSignupOTP()">Get OTP</button>
+      </div>
+      
+      <div id="signupStep2" style="display:none;">
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 15px;">Enter the 6-digit code sent to your email.</p>
+        <div class="otp-container" id="signupOtpContainer">
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+        </div>
+        <div id="signupOtpError" class="auth-error"></div>
+        <button class="auth-btn" onclick="signup()">Verify & Create Account</button>
+        <div class="auth-footer">
+          Didn't get it? <a href="javascript:void(0)" onclick="sendSignupOTP()">Resend</a>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="javascript:void(0)" onclick="showLogin()">Sign in instead</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-card" id="resetCard" style="display:none;">
+    <div class="auth-header">
+      <span class="auth-icon">🔑</span>
+      <h2>Reset Password</h2>
+      <p>Securely reset your account access</p>
+    </div>
+    <div class="auth-body">
+      <div id="resetStep1">
+        <div class="field-wrap">
+          <label>Email Address</label>
+          <input type="email" id="resetEmail" placeholder="you@example.com"/>
+        </div>
+        <div id="resetError" class="auth-error"></div>
+        <button class="auth-btn" id="btnSendResetOtp" onclick="sendResetOTP()">Send Reset Code</button>
+      </div>
+
+      <div id="resetStep2" style="display:none;">
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 15px;">Enter the 6-digit code sent to your email.</p>
+        <div class="otp-container" id="resetOtpContainer">
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+          <input type="tel" class="otp-box" maxlength="1" />
+        </div>
+        <div class="field-wrap" style="margin-top: 20px;">
+          <label>New Password</label>
+          <input type="password" id="resetNewPass" placeholder="Enter new password"/>
+        </div>
+        <div id="resetOtpError" class="auth-error"></div>
+        <button class="auth-btn" onclick="confirmReset()">Reset Password</button>
+      </div>
+
+      <div class="auth-footer">
+        Remembered it? <a href="javascript:void(0)" onclick="showLogin()">Back to login</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <span class="brand-icon">🪶</span>
+    <div>
+      <div class="brand-name">Ink &amp; Impressions</div>
+      <div class="brand-sub">A place for your thoughts ♡</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <a class="nav-item active" data-sec="diary"     onclick="setNav(this); closeSidebar();"><span>📖</span> Dashboard</a>
+    <a class="nav-item"        data-sec="settings"  onclick="openSettings(); closeSidebar();"><span>⚙️</span> Settings</a>
+    <a class="nav-item"        id="logoutBtn"       onclick="logout(); closeSidebar();" style="display:none; color: #a33;"><span>🚪</span> Logout</a>
+  </nav>
+  <div class="sidebar-quote">
+    <p>"The best thing about writing a diary is that you don't have to worry about grammar."</p>
+    <cite>— You</cite>
+  </div>
+  <button class="btn-new" onclick="openNewEntry()">＋ New Entry</button>
+
+  <!-- MOBILE CALENDAR (Hidden on PC) -->
+  <div class="sidebar-cal-wrap">
+    <div class="rcard cal-card sidebar-cal">
+      <div class="cal-nav">
+        <button onclick="calPrev()">&#8249;</button>
+        <span id="calTitleSidebar"></span>
+        <button onclick="calNext()">&#8250;</button>
+      </div>
+      <div class="cal-dow-row">
+        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+      </div>
+      <div id="calGridSidebar" class="cal-grid"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ENTRIES LIST -->
+<section class="entries-panel">
+  <div class="entries-header">
+    <div class="hdr-left">
+      <button class="btn-menu" onclick="toggleSidebar()">
+        <svg width="14" height="14" viewBox="0 0 14 14"><path d="M1,3.5 L13,3.5 M1,7 L13,7 M1,10.5 L13,10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <h2>My Diary</h2>
+    </div>
+    <button class="hdr-btn" onclick="toggleSort()">
+      <svg width="13" height="13" viewBox="0 0 13 13"><line x1="1" y1="3.5" x2="12" y2="3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1" y1="6.5" x2="8.5" y2="6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1" y1="9.5" x2="5.5" y2="9.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div id="entriesList" class="entries-list"></div>
+  <button class="fab" onclick="openNewEntry()" title="New Entry">＋</button>
+</section>
+
+<!-- ENTRY VIEW -->
+<section class="entry-view" id="entryView">
+  <div id="viewTop" class="view-header"></div>
+  <div id="viewContent" class="view-body"></div>
+</section>
+
+<!-- RIGHT PANEL -->
+<aside class="right-panel">
+
+  <div class="rcard cal-card">
+    <div class="cal-nav">
+      <button onclick="calPrev()">&#8249;</button>
+      <span id="calTitle"></span>
+      <button onclick="calNext()">&#8250;</button>
+    </div>
+    <div class="cal-dow-row">
+      <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+    </div>
+    <div id="calGrid" class="cal-grid"></div>
+    <div class="cal-tagline">Every day is a new page in your story.</div>
+  </div>
+
+  <div class="rcard">
+    <div class="rcard-header">
+      <span class="rcard-title">MOOD OVERVIEW</span>
+      <span class="rcard-sub">THIS WEEK</span>
+    </div>
+    <div class="mood-chart-wrap">
+      <canvas id="moodCanvas"></canvas>
+    </div>
+    <div class="mood-xlabels" id="moodXLabels"></div>
+  </div>
+
+  <div class="rcard streak-card">
+    <div class="rcard-title">WRITING STREAK</div>
+    <div class="streak-body">
+      <span class="streak-fire">🔥</span>
+      <strong id="streakNum">0</strong>
+      <span class="streak-unit">days</span>
+      <span id="streakMsg" class="streak-msg">Start writing!</span>
+    </div>
+  </div>
+
+  <div class="rcard">
+    <div class="rcard-header">
+      <span class="rcard-title">TAGS</span>
+      <span class="rcard-link" onclick="openSearch()">VIEW ALL</span>
+    </div>
+    <div id="tagCloud" class="tag-cloud"></div>
+  </div>
+
+  <div class="rcard">
+    <div class="rcard-header">
+      <span class="rcard-title">RECENT MEMORIES</span>
+      <span class="rcard-link" onclick="openSearch()">VIEW ALL</span>
+    </div>
+    <div id="memoriesList"></div>
+  </div>
+
+</aside>
+
+<!-- NEW/EDIT MODAL -->
+<div class="overlay" id="entryModal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="modalTitle">New Entry</h3>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <input id="fTitle" class="mfield" type="text" placeholder="Give your day a title…"/>
+    <div class="mood-pick-row">
+      <span class="mlabel">Mood today</span>
+      <div class="mood-opts" id="moodOpts">
+        <span class="mopt" data-v="5" onclick="pickMood(5)">😄</span>
+        <span class="mopt" data-v="4" onclick="pickMood(4)">🙂</span>
+        <span class="mopt" data-v="3" onclick="pickMood(3)">😐</span>
+        <span class="mopt" data-v="2" onclick="pickMood(2)">😕</span>
+        <span class="mopt" data-v="1" onclick="pickMood(1)">😞</span>
+      </div>
+    </div>
+    <textarea id="fBody" class="mfield mfield-ta" placeholder="Write your thoughts here…"></textarea>
+    <input id="fNotes" class="mfield" type="text" placeholder="Things to remember (comma separated)"/>
+    <input id="fTags"  class="mfield" type="text" placeholder="Tags: #work, #health, #growth"/>
+    <div class="modal-foot">
+      <button class="mbtn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="mbtn-save" id="saveBtn" onclick="persistEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH MODAL -->
+<div class="overlay" id="searchModal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>Search</h3>
+      <button class="modal-x" onclick="closeSearch()">✕</button>
+    </div>
+    <input id="searchQ" class="mfield" type="text" placeholder="Search title, content or tag…" oninput="doSearch()"/>
+    <div id="searchResults"></div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="overlay" id="confirmModal">
+  <div class="modal confirm-modal" onclick="event.stopPropagation()">
+    <p style="font-family:'Lora',serif;font-size:15px;color:var(--ink);margin-bottom:18px;">Delete this entry? This cannot be undone.</p>
+    <div class="modal-foot">
+      <button class="mbtn-ghost" onclick="document.getElementById('confirmModal').classList.remove('open')">Cancel</button>
+      <button class="mbtn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsModal">
+  <div class="modal" onclick="event.stopPropagation()" style="width: 400px;">
+    <div class="modal-head">
+      <h3>Settings</h3>
+      <button class="modal-x" onclick="closeSettings()">✕</button>
+    </div>
+    <div style="margin-bottom: 24px;">
+      <label class="mlabel" style="display:block; margin-bottom: 10px; font-weight: 600;">Paper Theme</label>
+      <div style="display:flex; gap:10px;">
+        <button class="mbtn-ghost" id="theme-vintage" onclick="setTheme('vintage')">Vintage (Default)</button>
+        <button class="mbtn-ghost" id="theme-dark" onclick="setTheme('dark')">Midnight Dark</button>
+      </div>
+    </div>
+    <div style="margin-bottom: 24px;">
+      <label class="mlabel" style="display:block; margin-bottom: 10px; font-weight: 600;">Diary Font Size</label>
+      <div style="display:flex; align-items:center; gap:15px; background: rgba(180,140,70,.05); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border);">
+        <span style="font-family: 'Lora', serif; font-size: 14px; color: var(--muted);">A</span>
+        <input type="range" id="fs-slider" min="14" max="32" value="19" step="1" oninput="updateFontSize(this.value)" style="flex:1; cursor: pointer; accent-color: var(--acc);">
+        <span style="font-family: 'Lora', serif; font-size: 22px; color: var(--ink);">A</span>
+      </div>
+    </div>
+    <div style="margin-bottom: 24px;">
+      <label class="mlabel" style="display:block; margin-bottom: 10px; font-weight: 600;">Default Sort Order</label>
+      <div style="display:flex; gap:10px;">
+        <button class="mbtn-ghost" id="sort-desc" onclick="setSortOrder(false)">Newest First</button>
+        <button class="mbtn-ghost" id="sort-asc" onclick="setSortOrder(true)">Oldest First</button>
+      </div>
+    </div>
+    <div style="margin-bottom: 10px; padding-top: 10px; border-top: 1px solid var(--border2);">
+      <label class="mlabel" style="display:block; margin-bottom: 10px; font-weight: 600;">Data Management</label>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <button class="mbtn-ghost" onclick="exportData()">📥 Export as PDF</button>
+        <button class="mbtn-ghost" onclick="clearAllData()" style="color: #a33; border-color: #ecc;">🗑️ Wipe All Data</button>
+      </div>
+    </div>
+    <div style="padding-top: 16px; border-top: 1px solid var(--border2); margin-top: 6px;">
+      <button class="mbtn-ghost" onclick="closeSettings(); openDeleteAccount()" style="width:100%; color: #a33; border-color: #f5c6c6; font-size: 13px;">🚪 Delete My Account</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="overlay" id="deleteAccountModal">
+  <div class="modal" onclick="event.stopPropagation()" style="width:420px; text-align:center;">
+
+    <!-- Step 1: Confirmation ask -->
+    <div id="deleteStep1">
+      <div style="font-size: 52px; margin-bottom: 10px;">💔</div>
+      <h3 style="font-family:'Playfair Display',serif; color:var(--ink); margin-bottom:8px;">Delete Your Account?</h3>
+      <p style="color:var(--muted); font-size:13px; line-height:1.7; margin-bottom:24px;">
+        We're sorry to see you go. Your diary, your memories, your words — they mean a lot.<br><br>
+        If you proceed, your account will be scheduled for deletion. You'll have <strong>14 days</strong> to change your mind.
+      </p>
+      <div id="deleteStep1Error" class="auth-error"></div>
+      <button class="auth-btn" style="background:#c0392b; margin-bottom:10px;" onclick="requestDeleteOTP()">Yes, send me a verification code</button>
+      <button class="mbtn-ghost" style="width:100%;" onclick="closeDeleteAccount()">No, keep my account 🪶</button>
+    </div>
+
+    <!-- Step 2: OTP entry -->
+    <div id="deleteStep2" style="display:none;">
+      <div style="font-size: 40px; margin-bottom: 10px;">📬</div>
+      <h3 style="font-family:'Playfair Display',serif; color:var(--ink); margin-bottom:8px;">Check Your Email</h3>
+      <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Enter the 6-digit code we sent you to confirm deletion.</p>
+      <div class="otp-container" id="deleteOtpContainer">
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+      </div>
+      <div id="deleteOtpError" class="auth-error" style="margin-bottom:14px;"></div>
+      <button class="auth-btn" style="background:#c0392b; margin-bottom:10px;" onclick="confirmDeleteAccount()">Confirm Deletion</button>
+      <button class="mbtn-ghost" style="width:100%;" onclick="closeDeleteAccount()">Cancel 🪶</button>
+    </div>
+
+    <!-- Step 3: Farewell message -->
+    <div id="deleteStep3" style="display:none;">
+      <div style="font-size: 52px; margin-bottom: 14px;">🕊️</div>
+      <h3 style="font-family:'Playfair Display',serif; color:var(--ink); margin-bottom:12px;">Sorry to let you go…</h3>
+      <p style="color:var(--muted); font-size:14px; line-height:1.8;">
+        Your data will be removed after <strong>14 days</strong>.<br>
+        In case you're back, simply log in and your diary will be restored.<br><br>
+        <em>We'll keep a candle lit for you. 🪶</em>
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- WELCOME BACK MODAL -->
+<div class="overlay" id="welcomeBackModal">
+  <div class="modal" onclick="event.stopPropagation()" style="width:420px; text-align:center; padding: 40px 36px;">
+    <div style="font-size: 56px; margin-bottom: 14px;">🥹</div>
+    <h3 style="font-family:'Playfair Display',serif; font-size:26px; color:var(--ink); margin-bottom:12px;">You came back!</h3>
+    <p style="color:var(--muted); font-size:15px; line-height:1.8; margin-bottom:28px;">
+      We never stopped believing you'd return.<br>
+      Your diary, your words, your memories — <em>they were waiting for you.</em><br><br>
+      Welcome home. ❤️
+    </p>
+    <button class="auth-btn" onclick="document.getElementById('welcomeBackModal').classList.remove('open')">Continue Writing 🪶</button>
+  </div>
+</div>
+
+<script src="js/quotes.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
+<!-- 123 -->
