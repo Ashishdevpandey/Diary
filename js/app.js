@@ -5,6 +5,81 @@ const MOODS = { 5: "😄", 4: "🙂", 3: "😐", 2: "😕", 1: "😞" };
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+/* ── Encryption Utilities ── */
+let masterKey = null;
+
+async function deriveKey(password, salt) {
+  const encoder = new TextEncoder();
+  const passwordKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  return await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt.toLowerCase()),
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    passwordKey,
+    { name: "AES-GCM", length: 256 },
+    true, // extractable so we can save to sessionStorage
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encrypt(text, key) {
+  if (!text || !key) return text;
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv },
+    key,
+    encoder.encode(text)
+  );
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  return "enc:" + btoa(String.fromCharCode.apply(null, combined));
+}
+
+async function decrypt(encryptedBase64, key) {
+  if (!encryptedBase64 || !encryptedBase64.startsWith("enc:") || !key) return encryptedBase64;
+  try {
+    const combined = new Uint8Array(atob(encryptedBase64.slice(4)).split("").map(c => c.charCodeAt(0)));
+    const iv = combined.slice(0, 12);
+    const data = combined.slice(12);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      data
+    );
+    return new TextDecoder().decode(decrypted);
+  } catch (e) {
+    console.error("Decryption failed:", e);
+    return "[Decryption Failed - Check Password]";
+  }
+}
+
+async function exportKey(key) {
+  const exported = await crypto.subtle.exportKey("raw", key);
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(exported)));
+}
+
+async function importKey(base64) {
+  const raw = new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0)));
+  return await crypto.subtle.importKey(
+    "raw",
+    raw,
+    "AES-GCM",
+    true,
+    ["encrypt", "decrypt"]
+  );
+}
+
 /* ── State ── */
 let entries = [];
 let selectedId = null;
@@ -25,7 +100,17 @@ async function checkAuth() {
     const data = await res.json();
     if (data.authenticated) {
       currentUser = data.user;
-      initApp();
+      
+      // Try to recover key from session storage
+      const savedKey = sessionStorage.getItem('ii_master_key');
+      if (savedKey) {
+        masterKey = await importKey(savedKey);
+        initApp();
+      } else {
+        // Logged in but no key? Force re-login to derive key
+        // Or show an "Unlock" UI. For now, let's just show auth.
+        showAuth();
+      }
     } else {
       showAuth();
     }
@@ -72,8 +157,23 @@ async function loadEntries() {
   try {
     const res = await fetch('/api/entries');
     if (res.status === 401) return showAuth();
-    entries = await res.json();
+    const rawEntries = await res.json();
+    
+    // Decrypt all entries
+    entries = await Promise.all(rawEntries.map(async e => ({
+      ...e,
+      title: await decrypt(e.title, masterKey),
+      body: await decrypt(e.body, masterKey),
+      notes: await Promise.all((e.notes || []).map(n => decrypt(n, masterKey))),
+      tags: await Promise.all((e.tags || []).map(t => decrypt(t, masterKey)))
+    })));
+    
     renderList();
+    renderCalendar();
+    renderMoodChart();
+    renderStreak();
+    renderTagCloud();
+    renderMemories();
   } catch (e) {
     console.error("Cloud load failed:", e);
     entries = [];
@@ -101,21 +201,24 @@ async function saveEntry(data) {
 }
 
 async function updateEntry(data) {
+  // Encrypt before sending
+  const payload = {
+    ...data,
+    title: await encrypt(data.title, masterKey),
+    body: await encrypt(data.body, masterKey),
+    notes: await Promise.all((data.notes || []).map(n => encrypt(n, masterKey))),
+    tags: await Promise.all((data.tags || []).map(t => encrypt(t, masterKey)))
+  };
+
   const res = await fetch(`/api/entries/${data.id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    body: JSON.stringify(payload)
   });
-  const updated = await res.json();
-  const idx = entries.findIndex(x => x.id === updated.id);
-  if (idx !== -1) {
-    entries[idx] = updated;
-    renderList();
-    renderCalendar();
-    renderMoodChart();
-    selectEntry(updated.id);
-    closeModal();
-  }
+  
+  await loadEntries();
+  selectEntry(data.id);
+  closeModal();
 }
 
 async function deleteEntry(id) {
@@ -354,7 +457,13 @@ async function persistEntry() {
   const notes = notesRaw.split(",").map(s => s.trim()).filter(Boolean);
   const tags = tagsRaw.split(",").map(s => s.trim()).filter(Boolean);
 
-  const payload = { title: title || "Untitled", body, mood: pickedMood, notes, tags };
+  const payload = { 
+    title: await encrypt(title || "Untitled", masterKey), 
+    body: await encrypt(body, masterKey), 
+    mood: pickedMood, 
+    notes: await Promise.all(notes.map(n => encrypt(n, masterKey))), 
+    tags: await Promise.all(tags.map(t => encrypt(t, masterKey))) 
+  };
 
   if (editingId) {
     payload.id = editingId;
@@ -383,7 +492,6 @@ async function persistEntry() {
 
   closeModal();
   await loadEntries();
-  renderAll();
   if (editingId) selectEntry(editingId);
   else if (entries.length) selectEntry(entries[0].id);
   else showEmpty();
@@ -415,20 +523,6 @@ async function confirmDelete() {
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-async function toggleStar(id) {
-  const e = entries.find(x => x.id === id);
-  if (e) {
-    e.starred = !e.starred;
-    await fetch(`/api/entries/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(e)
-    });
-    await loadEntries();
-    renderAll();
-    selectEntry(id);
-  }
-}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MINI CALENDAR
@@ -860,6 +954,11 @@ async function login() {
     const data = await res.json();
     if (res.ok) {
       currentUser = data.user;
+      
+      // Derive and store master key
+      masterKey = await deriveKey(p, currentUser.username);
+      sessionStorage.setItem('ii_master_key', await exportKey(masterKey));
+      
       initApp(data.welcomed_back === true);
     } else {
       err.textContent = data.error || "Login failed";
@@ -977,6 +1076,11 @@ async function signup() {
     const data = await res.json();
     if (res.ok) {
       currentUser = data.user;
+
+      // Derive and store master key
+      masterKey = await deriveKey(p, currentUser.username);
+      sessionStorage.setItem('ii_master_key', await exportKey(masterKey));
+
       initApp();
     } else {
       err.textContent = data.error || "Signup failed";
