@@ -1229,6 +1229,81 @@ async function confirmDeleteAccount() {
 // Redraw canvas on resize
 window.addEventListener("resize", renderMoodChart);
 
+/* ─── PROBLEM REPORTING ─── */
+function openProblemModal() {
+  document.getElementById("problemDesc").value = "";
+  document.getElementById("problemError").textContent = "";
+  document.getElementById("problemModal").classList.add("open");
+  setTimeout(() => document.getElementById("problemDesc").focus(), 80);
+}
+
+function closeProblemModal() {
+  document.getElementById("problemModal").classList.remove("open");
+}
+
+async function submitProblem() {
+  const desc = document.getElementById("problemDesc").value.trim();
+  const fileInput = document.getElementById("problemImage");
+  const errEl = document.getElementById("problemError");
+  const btn = document.getElementById("btnSubmitProblem");
+
+  if (!desc) {
+    errEl.textContent = "Please describe the problem.";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Sending...";
+  errEl.textContent = "";
+
+  let imageData = null;
+  if (fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      errEl.textContent = "Image size should be less than 2MB.";
+      btn.disabled = false;
+      btn.textContent = "Send Report";
+      return;
+    }
+    
+    // Convert to base64
+    imageData = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  try {
+    const res = await fetch('/api/report_problem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: desc, image: imageData })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      btn.textContent = "Sent! ✨";
+      btn.style.background = "#27ae60"; // Green for success
+      
+      setTimeout(() => {
+        closeProblemModal();
+        // Reset button for next time
+        btn.textContent = "Send Report";
+        btn.style.background = ""; 
+      }, 1500);
+      
+    } else {
+      errEl.textContent = data.error || "Failed to send report.";
+      btn.disabled = false;
+      btn.textContent = "Send Report";
+    }
+  } catch (e) {
+    errEl.textContent = "Server error. Please try again later.";
+    btn.disabled = false;
+    btn.textContent = "Send Report";
+  }
+}
+
 // Close overlays on background click
 document.querySelectorAll(".overlay").forEach(el => {
   el.addEventListener("click", e => { 

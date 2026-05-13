@@ -24,7 +24,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'ink-and-impressions-secret-key-12
 # OTP Store: { email: { 'otp': '123456', 'expiry': timestamp } }
 otp_store = {}
 
-def send_email(target_email, subject, body, image_filename='Mail.png'):
+def send_email(target_email, subject, body, image_filename='Mail.png', **kwargs):
     sender = os.environ.get('MAIL_USERNAME')
     password = os.environ.get('MAIL_PASSWORD')
     if not sender or not password:
@@ -39,11 +39,10 @@ def send_email(target_email, subject, body, image_filename='Mail.png'):
     # Attach HTML body
     msg.attach(MIMEText(body, 'html'))
     
-    # Attach image if it exists
-    image_path = image_filename
-    if os.path.exists(image_path):
+    # Attach image if it exists (from local file)
+    if image_filename and os.path.exists(image_filename):
         try:
-            with open(image_path, 'rb') as f:
+            with open(image_filename, 'rb') as f:
                 img_data = f.read()
             img = MIMEImage(img_data)
             img.add_header('Content-ID', '<mail_header_image>')
@@ -51,6 +50,17 @@ def send_email(target_email, subject, body, image_filename='Mail.png'):
             msg.attach(img)
         except Exception as img_err:
             print(f"Failed to attach image {image_filename}: {img_err}")
+    
+    # Attach raw image data if provided (from base64)
+    if 'raw_image_data' in kwargs and kwargs['raw_image_data']:
+        try:
+            import base64
+            img_data = base64.b64decode(kwargs['raw_image_data'])
+            img = MIMEImage(img_data)
+            img.add_header('Content-Disposition', 'attachment', filename='screenshot.png')
+            msg.attach(img)
+        except Exception as raw_img_err:
+            print(f"Failed to attach raw image: {raw_img_err}")
     
     try:
         # Use Gmail SMTP
@@ -601,6 +611,41 @@ def _cleanup_deleted_accounts_thread():
         run_cleanup()
         import time as t
         t.sleep(3600)  # run every hour
+
+@app.route('/api/report_problem', methods=['POST'])
+@login_required
+def report_problem():
+    data = request.json
+    error_msg = data.get('error')
+    username = current_user.username
+    
+    if not error_msg:
+        return jsonify({"error": "Error description required"}), 400
+        
+    developer_email = "ashishkumar02082003@gmail.com"
+    subject = f"New Problem Reported by {username} — Ink & Impressions"
+    
+    body = f"""
+    <div style="font-family:'Lora',serif;padding:30px;background:#fdfcf0;border:1px solid #d5c090;border-radius:12px;color:#2e1f0d;max-width:500px;margin:auto;">
+      <h2 style="color: #6b4c2a; margin-top: 0;">Problem Report</h2>
+      <p>Dear Developer,</p>
+      <p>A user has reported an issue in the application.</p>
+      <hr style="border:none;border-top:1px solid #d5c090;margin:20px 0;">
+      <p><b>From Complainant name:</b> {username}</p>
+      <p><b>Error is:</b><br>
+      <i style="color: #a33;">{error_msg}</i></p>
+      <hr style="border:none;border-top:1px solid #d5c090;margin:20px 0;">
+      <p>Thanks</p>
+      <p style="color:#6b4c2a;font-size:12px;font-style:italic;">— Ink & Impressions System</p>
+    </div>
+    """
+    
+    # Send in background thread so user doesn't have to wait
+    import threading
+    thread = threading.Thread(target=send_email, args=(developer_email, subject, body, None), kwargs={'raw_image_data': data.get('image')})
+    thread.start()
+    
+    return jsonify({"message": "Report submitted successfully"})
 
 # ─── Account Deletion Routes ─────────────────────────────────────────────────
 

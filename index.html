@@ -140,6 +140,7 @@
   <nav class="nav">
     <a class="nav-item active" data-sec="diary"     onclick="setNav(this); closeSidebar();"><span>📖</span> Dashboard</a>
     <a class="nav-item"        data-sec="settings"  onclick="openSettings(); closeSidebar();"><span>⚙️</span> Settings</a>
+    <a class="nav-item"        onclick="openProblemModal(); closeSidebar();"><span>🚨</span> Report Problem</a>
     <a class="nav-item"        id="logoutBtn"       onclick="logout(); closeSidebar();" style="display:none; color: #a33;"><span>🚪</span> Logout</a>
   </nav>
   <div class="sidebar-quote">
@@ -382,6 +383,32 @@
       </p>
     </div>
 
+  </div>
+</div>
+
+<!-- PROBLEM REPORT MODAL -->
+<div class="overlay" id="problemModal">
+  <div class="modal" onclick="event.stopPropagation()" style="width: 400px;">
+    <div class="modal-head">
+      <h3>Report a Problem</h3>
+      <button class="modal-x" onclick="closeProblemModal()">✕</button>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 15px;">
+        If you're facing any issues, let the developer know.
+      </p>
+      <label class="mlabel" style="display:block; margin-bottom: 8px; font-weight: 600;">What's wrong?</label>
+      <textarea id="problemDesc" class="mfield mfield-ta" style="height: 100px;" placeholder="Describe the error or problem here…"></textarea>
+      
+      <label class="mlabel" style="display:block; margin-top: 15px; margin-bottom: 8px; font-weight: 600;">Attach Screenshot (Optional)</label>
+      <input type="file" id="problemImage" accept="image/*" style="font-size: 12px; color: var(--muted); background: var(--border-subtle); padding: 8px; border-radius: 6px; width: 100%; border: 1px dashed var(--border);">
+      
+      <div id="problemError" class="auth-error"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="mbtn-ghost" onclick="closeProblemModal()">Cancel</button>
+      <button class="mbtn-save" id="btnSubmitProblem" onclick="submitProblem()">Send Report</button>
+    </div>
   </div>
 </div>
 
