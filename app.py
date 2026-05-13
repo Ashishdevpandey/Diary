@@ -63,14 +63,15 @@ def send_email(target_email, subject, body, image_filename='Mail.png', **kwargs)
             print(f"Failed to attach raw image: {raw_img_err}")
     
     try:
-        # Use Gmail SMTP
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        # Use Gmail SMTP with a 5-second timeout to prevent hanging on Vercel
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=5) as server:
             server.login(sender, password)
             server.send_message(msg)
-        return True
+        return True, None
     except Exception as e:
-        print(f"Failed to send email: {e}")
-        return False
+        error_str = str(e) or repr(e)
+        print(f"Failed to send email: {error_str}")
+        return False, error_str
 
 # Setup Login Manager
 login_manager = LoginManager()
@@ -274,9 +275,11 @@ def send_otp():
     </div>
     """
     
-    if send_email(email, subject, body):
+    success, err_msg = send_email(email, subject, body)
+    if success:
         return jsonify({"message": "OTP sent successfully"})
-    return jsonify({"error": "Failed to send OTP"}), 500
+    else:
+        return jsonify({"error": f"Failed to send OTP: {err_msg}"}), 500
 
 @app.route('/api/signup', methods=['POST'])
 def signup():
@@ -380,9 +383,11 @@ def reset_request():
     </div>
     """
     
-    if send_email(email, subject, body, image_filename='change pswd.png'):
+    success, err_msg = send_email(email, subject, body, image_filename='change pswd.png')
+    if success:
         return jsonify({"message": "OTP sent successfully"})
-    return jsonify({"error": "Failed to send OTP"}), 500
+    else:
+        return jsonify({"error": f"Failed to send OTP: {err_msg}"}), 500
 
 @app.route('/api/password_reset/confirm', methods=['POST'])
 def reset_confirm():
@@ -642,12 +647,12 @@ def report_problem():
     
     # Send synchronously so we can catch errors and inform the user
     # Also Vercel background threads are unreliable
-    success = send_email(developer_email, subject, body, image_filename=None, raw_image_data=data.get('image'))
+    success, err_msg = send_email(developer_email, subject, body, image_filename=None, raw_image_data=data.get('image'))
     
     if success:
         return jsonify({"message": "Report submitted successfully"})
     else:
-        return jsonify({"error": "Failed to send email. Please check your connection or try again later."}), 500
+        return jsonify({"error": f"Failed to send email: {err_msg}"}), 500
 
 # ─── Account Deletion Routes ─────────────────────────────────────────────────
 
@@ -690,9 +695,11 @@ def account_delete_request():
       <p style="font-size:12px;color:#a07840;">If you didn't request this, please ignore this email. Your account is safe.</p>
     </div>
     """
-    if send_email(user_data['email'], subject, body, image_filename='Deletion request.png'):
-        return jsonify({"message": "OTP sent to your email"})
-    return jsonify({"error": "Failed to send OTP"}), 500
+    success, err_msg = send_email(user_data['email'], subject, body, image_filename='Deletion request.png')
+    if success:
+        return jsonify({"message": "OTP sent successfully"})
+    else:
+        return jsonify({"error": f"Failed to send OTP: {err_msg}"}), 500
 
 @app.route('/api/account/delete/confirm', methods=['POST'])
 @login_required
