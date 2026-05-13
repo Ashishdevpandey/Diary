@@ -367,7 +367,7 @@ function selectEntry(id) {
     : "";
 
   // Body — split by double newline into paragraphs
-  const paras = e.body.split(/\n\n+/).map(p => `<p>${esc(p.replace(/\n/g, "<br>"))}</p>`).join("");
+  const paras = e.body.split(/\n\n+/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
 
   document.getElementById("viewContent").innerHTML = `
     <div class="view-title">${esc(e.title)}</div>
