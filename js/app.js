@@ -358,7 +358,7 @@ function selectEntry(id) {
   const notesHtml = e.notes && e.notes.length
     ? `<div class="view-notes">
          <div class="view-notes-title">📝 Things to remember</div>
-         <ul>${e.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+         <ul>${e.notes.map(n => `<li>${esc(n.replace(/<br\s*\/?>/gi, "\n"))}</li>`).join("")}</ul>
        </div>` : "";
 
   // Tags
@@ -367,7 +367,7 @@ function selectEntry(id) {
     : "";
 
   // Body — split by double newline into paragraphs
-  const paras = e.body.split(/\n\n+/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  const paras = e.body.replace(/<br\s*\/?>/gi, "\n").split(/\n\n+/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
 
   document.getElementById("viewContent").innerHTML = `
     <div class="view-title">${esc(e.title)}</div>
@@ -449,12 +449,12 @@ function syncMoodUI() {
 
 async function persistEntry() {
   const title = document.getElementById("fTitle").value.trim();
-  const body = document.getElementById("fBody").value.trim();
+  const body = document.getElementById("fBody").value.trim().replace(/<br\s*\/?>/gi, "\n");
   if (!title && !body) { alert("Write something first!"); return; }
 
   const notesRaw = document.getElementById("fNotes").value;
   const tagsRaw = document.getElementById("fTags").value;
-  const notes = notesRaw.split(",").map(s => s.trim()).filter(Boolean);
+  const notes = notesRaw.split(",").map(s => s.trim().replace(/<br\s*\/?>/gi, "\n")).filter(Boolean);
   const tags = tagsRaw.split(",").map(s => s.trim()).filter(Boolean);
 
   const payload = { 
