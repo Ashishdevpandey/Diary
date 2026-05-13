@@ -617,7 +617,7 @@ def _cleanup_deleted_accounts_thread():
 def report_problem():
     data = request.json
     error_msg = data.get('error')
-    username = current_user.username
+    username = getattr(current_user, 'username', 'Unknown User')
     
     if not error_msg:
         return jsonify({"error": "Error description required"}), 400
@@ -640,12 +640,14 @@ def report_problem():
     </div>
     """
     
-    # Send in background thread so user doesn't have to wait
-    import threading
-    thread = threading.Thread(target=send_email, args=(developer_email, subject, body, None), kwargs={'raw_image_data': data.get('image')})
-    thread.start()
+    # Send synchronously so we can catch errors and inform the user
+    # Also Vercel background threads are unreliable
+    success = send_email(developer_email, subject, body, image_filename=None, raw_image_data=data.get('image'))
     
-    return jsonify({"message": "Report submitted successfully"})
+    if success:
+        return jsonify({"message": "Report submitted successfully"})
+    else:
+        return jsonify({"error": "Failed to send email. Please check your connection or try again later."}), 500
 
 # ─── Account Deletion Routes ─────────────────────────────────────────────────
 

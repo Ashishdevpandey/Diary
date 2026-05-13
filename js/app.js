@@ -1251,6 +1251,11 @@ async function submitProblem() {
     errEl.textContent = "Please describe the problem.";
     return;
   }
+  
+  if (desc.length > 5000) {
+    errEl.textContent = "Description is too long. Please keep it under 5000 characters.";
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = "Sending...";
@@ -1290,6 +1295,7 @@ async function submitProblem() {
         // Reset button for next time
         btn.textContent = "Send Report";
         btn.style.background = ""; 
+        btn.disabled = false;
       }, 1500);
       
     } else {
