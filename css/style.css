@@ -141,20 +141,30 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 12px;
+  padding: 10px 14px;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--s-text);
   cursor: pointer;
   text-decoration: none;
-  transition: background .12s, color .12s;
+  transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
+  margin-bottom: 2px;
 }
 
-.nav-item span {
-  font-size: 14px;
-  line-height: 1;
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke-width: 1.8;
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+  opacity: 1;
 }
 
 .nav-item:hover {
