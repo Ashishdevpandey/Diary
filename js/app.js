@@ -135,8 +135,11 @@ async function initApp(welcomedBack = false) {
   renderTagCloud();
   renderMemories();
 
-  if (entries.length > 0) {
+  if (entries.length > 0 && window.innerWidth > 900) {
     selectEntry(entries[0].id);
+  } else if (entries.length > 0) {
+    // On mobile, just show the list (stay on dashboard)
+    showWelcome();
   } else {
     showEmpty();
   }
@@ -380,6 +383,23 @@ function selectEntry(id) {
   document.getElementById("entryView").scrollTo(0, 0);
 }
 
+function showWelcome() {
+  document.getElementById("viewTop").innerHTML = `
+    <div class="view-toolbar">
+      <div style="flex:1"></div>
+    </div>`;
+    
+  document.getElementById("viewContent").innerHTML = `
+    <div class="empty-state">
+      <span class="empty-state-big">✍️</span>
+      Welcome back to your diary.<br>Select an entry to read or <strong>＋ New Entry</strong> to write.
+    </div>`;
+  
+  if (window.innerWidth <= 900) {
+    closeEntryView();
+  }
+}
+
 function showEmpty() {
   // On mobile, if we're showing empty, we should still allow going back or creating a new one
   document.getElementById("viewTop").innerHTML = `
@@ -578,12 +598,8 @@ function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
    MOOD CHART
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function renderMoodChart() {
-  const canvas = document.getElementById("moodCanvas");
-  const wrap = canvas.parentElement;
-  canvas.width = wrap.offsetWidth || 190;
-  canvas.height = 68;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const canvases = [document.getElementById("moodCanvas"), document.getElementById("moodCanvasSidebar")].filter(Boolean);
+  if (!canvases.length) return;
 
   const pad = n => String(n).padStart(2, "0");
   const now = new Date();
@@ -598,98 +614,106 @@ function renderMoodChart() {
   });
 
   // Update x labels
-  const xlEl = document.getElementById("moodXLabels");
-  xlEl.innerHTML = "";
-  days.forEach(ds => {
-    const d = new Date(ds + "T12:00:00"); // Avoid timezone shifts
-    const sp = document.createElement("span");
-    sp.textContent = d.toLocaleString('en-US', { weekday: 'short' });
-    xlEl.appendChild(sp);
+  const xlEls = [document.getElementById("moodXLabels"), document.getElementById("moodXLabelsSidebar")].filter(Boolean);
+  xlEls.forEach(xlEl => {
+    xlEl.innerHTML = "";
+    days.forEach(ds => {
+      const d = new Date(ds + "T12:00:00");
+      const sp = document.createElement("span");
+      sp.textContent = d.toLocaleString('en-US', { weekday: 'short' });
+      xlEl.appendChild(sp);
+    });
+    xlEl.style.display = "flex";
+    xlEl.style.justifyContent = "space-between";
+    xlEl.style.padding = "0 2px";
   });
-  xlEl.style.display = "flex";
-  xlEl.style.justifyContent = "space-between";
-  xlEl.style.padding = "0 2px";
 
-  const W = canvas.width;
-  const H = canvas.height - 10;
-  const pts = moods.map((m, i) => ({
-    x: 15 + (i / 6) * (W - 30),
-    y: m !== null ? H - 4 - ((m - 1) / 4) * (H - 20) : null
-  }));
+  canvases.forEach(canvas => {
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth || 190;
+    canvas.height = 68;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 1. Draw horizontal grid lines (Subtle)
-  ctx.strokeStyle = "rgba(139, 101, 53, 0.1)";
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 5; i++) {
-    const gy = H - 4 - (i / 4) * (H - 20);
-    ctx.beginPath();
-    ctx.moveTo(15, gy);
-    ctx.lineTo(W - 15, gy);
-    ctx.stroke();
-  }
+    const W = canvas.width;
+    const H = canvas.height - 10;
+    const pts = moods.map((m, i) => ({
+      x: 15 + (i / 6) * (W - 30),
+      y: m !== null ? H - 4 - ((m - 1) / 4) * (H - 20) : null
+    }));
 
-  const validPts = pts.filter(p => p.y !== null);
-  if (validPts.length < 2) return;
-
-  // 2. Area Gradient Fill
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, "rgba(215, 120, 40, 0.2)");
-  grad.addColorStop(1, "rgba(215, 120, 40, 0)");
-
-  ctx.beginPath();
-  ctx.moveTo(validPts[0].x, H);
-  validPts.forEach((p, i) => {
-    if (i === 0) ctx.lineTo(p.x, p.y);
-    else {
-      const prev = validPts[i - 1];
-      const cx = (prev.x + p.x) / 2;
-      ctx.quadraticCurveTo(prev.x, prev.y, cx, (prev.y + p.y) / 2);
-      ctx.lineTo(p.x, p.y);
+    // 1. Draw horizontal grid lines
+    ctx.strokeStyle = "rgba(139, 101, 53, 0.1)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const gy = H - 4 - (i / 4) * (H - 20);
+      ctx.beginPath();
+      ctx.moveTo(15, gy);
+      ctx.lineTo(W - 15, gy);
+      ctx.stroke();
     }
-  });
-  ctx.lineTo(validPts[validPts.length - 1].x, H);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
 
-  // 3. Smooth Main Line
-  ctx.shadowColor = "rgba(215, 120, 40, 0.2)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 4;
-  ctx.strokeStyle = "#d77828"; // Faded Vintage Orange
-  ctx.lineWidth = 3.5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+    const validPts = pts.filter(p => p.y !== null);
+    if (validPts.length < 2) return;
 
-  ctx.beginPath();
-  validPts.forEach((p, i) => {
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else {
-      const prev = validPts[i - 1];
-      const cp1x = prev.x + (p.x - prev.x) / 2;
-      ctx.bezierCurveTo(cp1x, prev.y, cp1x, p.y, p.x, p.y);
-    }
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
+    // 2. Area Gradient Fill
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "rgba(215, 120, 40, 0.2)");
+    grad.addColorStop(1, "rgba(215, 120, 40, 0)");
 
-  // 4. Dots (Premium Style)
-  validPts.forEach(p => {
-    // Outer glow/ring
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = "var(--p0)";
+    ctx.moveTo(validPts[0].x, H);
+    validPts.forEach((p, i) => {
+      if (i === 0) ctx.lineTo(p.x, p.y);
+      else {
+        const prev = validPts[i - 1];
+        const cx = (prev.x + p.x) / 2;
+        ctx.quadraticCurveTo(prev.x, prev.y, cx, (prev.y + p.y) / 2);
+        ctx.lineTo(p.x, p.y);
+      }
+    });
+    ctx.lineTo(validPts[validPts.length - 1].x, H);
+    ctx.closePath();
+    ctx.fillStyle = grad;
     ctx.fill();
+
+    // 3. Smooth Main Line
+    ctx.shadowColor = "rgba(215, 120, 40, 0.2)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
     ctx.strokeStyle = "#d77828";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-    // Inner dot
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = "#d77828";
-    ctx.fill();
+    validPts.forEach((p, i) => {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else {
+        const prev = validPts[i - 1];
+        const cp1x = prev.x + (p.x - prev.x) / 2;
+        ctx.bezierCurveTo(cp1x, prev.y, cp1x, p.y, p.x, p.y);
+      }
+    });
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // 4. Dots
+    validPts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "var(--p0)";
+      ctx.fill();
+      ctx.strokeStyle = "#d77828";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#d77828";
+      ctx.fill();
+    });
   });
 }
 
@@ -706,13 +730,18 @@ function renderStreak() {
     if (entries.some(e => e.date === ds)) streak++;
     else break;
   }
-  document.getElementById("streakNum").textContent = streak;
-  document.getElementById("streakMsg").textContent =
-    streak === 0 ? "Start writing!" :
-      streak < 3 ? "Good start!" :
-        streak < 7 ? "Keep going! 🌱" :
-          streak < 14 ? "You're on fire! 🔥" :
-            "Unstoppable! 💪";
+  
+  const streakNums = [document.getElementById("streakNum"), document.getElementById("streakNumSidebar")].filter(Boolean);
+  const streakMsgs = [document.getElementById("streakMsg"), document.getElementById("streakMsgSidebar")].filter(Boolean);
+  
+  const msg = streak === 0 ? "Start writing!" :
+              streak < 3 ? "Good start!" :
+              streak < 7 ? "Keep going! 🌱" :
+              streak < 14 ? "You're on fire! 🔥" :
+              "Unstoppable! 💪";
+
+  streakNums.forEach(el => el.textContent = streak);
+  streakMsgs.forEach(el => el.textContent = msg);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -805,8 +834,12 @@ function esc(s) {
 }
 
 function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
+  const isOpen = document.getElementById("sidebar").classList.toggle("open");
   document.getElementById("sidebarOverlay").classList.toggle("open");
+  if (isOpen) {
+    renderMoodChart();
+    renderStreak();
+  }
 }
 function closeSidebar() {
   document.getElementById("sidebar").classList.remove("open");

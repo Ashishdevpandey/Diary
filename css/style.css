@@ -1275,16 +1275,43 @@ input[type=range]:active::-webkit-slider-thumb {
     margin: 20px 12px;
   }
   
-  .sidebar-cal {
+  .sidebar-cal, .sidebar-streak, .sidebar-mood {
     background: rgba(255,255,255,0.03) !important;
     border-color: var(--s-border) !important;
     padding: 10px !important;
+    overflow: hidden; /* Prevent any minor overflow */
+  }
+
+  .sidebar-cal .cal-grid {
+    gap: 2px !important;
+  }
+
+  .sidebar-cal .cday {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 11px !important;
+  }
+
+  .sidebar-cal .cal-dow-row span {
+    font-size: 9px !important;
   }
   
-  .sidebar-cal span, .sidebar-cal button {
+  .sidebar-cal span, .sidebar-cal button,
+  .sidebar-streak .rcard-title, .sidebar-mood .rcard-title,
+  .sidebar-streak .streak-unit, .sidebar-streak .streak-msg,
+  .sidebar-mood .rcard-sub, .sidebar-mood .mood-xlabels span {
     color: var(--s-text) !important;
   }
   
+  .sidebar-streak strong {
+    color: #f5df9a !important;
+  }
+
+  .sidebar-mood .mood-xlabels span {
+    font-size: 9px;
+    color: var(--s-muted) !important;
+  }
+
   .sidebar-cal .cday {
     color: var(--s-muted);
   }
