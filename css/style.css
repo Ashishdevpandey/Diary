@@ -65,6 +65,17 @@ body {
   color: var(--ink);
 }
 
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('../assets/bg.png');
+  background-size: cover;
+  background-position: center;
+  filter: blur(4px) brightness(0.85) contrast(1.1);
+  transform: scale(1.03); /* Prevent white edges from blur */
+}
+
 /* ─── SIDEBAR ────────────────────────────────────────────── */
 .sidebar {
   position: fixed;
@@ -72,7 +83,7 @@ body {
   left: -260px;
   width: 240px;
   height: 100vh;
-  background: var(--s-bg);
+  background: rgba(28, 20, 9, 0.9); /* var(--s-bg) with alpha */
   border-right: 1.5px solid var(--s-border);
   display: flex;
   flex-direction: column;
@@ -82,6 +93,7 @@ body {
   z-index: 1000;
   transition: left 0.3s ease;
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
 }
 
 .sidebar.open {
@@ -220,7 +232,7 @@ body {
 
 /* ─── ENTRIES PANEL ──────────────────────────────────────── */
 .entries-panel {
-  background: var(--p1);
+  background: rgba(240, 230, 202, 0.75); /* var(--p1) with alpha */
   border-right: 1.5px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -230,6 +242,7 @@ body {
       rgba(180, 140, 70, .12) 27px, rgba(180, 140, 70, .12) 28px);
   /* subtle paper noise */
   position: relative;
+  backdrop-filter: blur(5px);
 }
 
 .entries-panel::before {
@@ -248,7 +261,7 @@ body {
   padding: 16px 16px 10px;
   position: sticky;
   top: 0;
-  background: var(--p1);
+  background: transparent;
   z-index: 2;
   border-bottom: 1px solid var(--border2);
   flex-shrink: 0;
@@ -412,11 +425,12 @@ body {
 
 /* ─── ENTRY VIEW ─────────────────────────────────────────── */
 .entry-view {
-  background: var(--p0);
+  background: rgba(247, 240, 223, 0.8); /* var(--p0) with alpha */
   overflow-y: auto;
   position: relative;
   background-image:
     repeating-linear-gradient(transparent, transparent 31px, rgba(180, 140, 70, .10) 31px, rgba(180, 140, 70, .10) 32px);
+  backdrop-filter: blur(8px);
 }
 
 /* spine holes */
@@ -440,7 +454,7 @@ body {
   border-bottom: 1px solid var(--border2);
   position: sticky;
   top: 0;
-  background: var(--p0);
+  background: transparent;
   z-index: 2;
 }
 
@@ -632,7 +646,7 @@ body {
 
 /* ─── RIGHT PANEL ────────────────────────────────────────── */
 .right-panel {
-  background: var(--p2);
+  background: rgba(236, 224, 192, 0.75); /* var(--p2) with alpha */
   border-left: 1.5px solid var(--border);
   overflow-y: auto;
   padding: 16px 14px;
@@ -641,6 +655,7 @@ body {
   gap: 16px;
   background-image: repeating-linear-gradient(transparent, transparent 27px,
       rgba(180, 140, 70, .08) 27px, rgba(180, 140, 70, .08) 28px);
+  backdrop-filter: blur(5px);
 }
 
 .rcard {
