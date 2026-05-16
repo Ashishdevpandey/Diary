@@ -478,7 +478,7 @@ def login():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, username, password_hash, email, deletion_scheduled FROM users WHERE username = %s OR email = %s", (username, username))
+        cur.execute("SELECT id, username, password_hash, email, deletion_scheduled, data_wipe_scheduled, data_wipe_date FROM users WHERE username = %s OR email = %s", (username, username))
         row = cur.fetchone()
         cur.close()
         if row and bcrypt.checkpw(password.encode('utf-8'), row['password_hash'].encode('utf-8')):
