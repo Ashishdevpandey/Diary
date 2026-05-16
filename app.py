@@ -664,7 +664,7 @@ def _send_restore_confirmation_email(email, username):
       <p style="margin-top:24px;font-style:italic;color:#28a745;">Happy writing! 🪶</p>
     </div>
     """
-    send_email(email, subject, body, image_filename='Deletion request.png')
+    send_email(email, subject, body, image_filename=None)
 
 def run_cleanup():
     """Performs the 14-day grace period cleanup once. 
