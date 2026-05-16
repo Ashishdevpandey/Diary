@@ -44,3 +44,55 @@ Using Local JSON Database
 127.0.0.1 - - [16/May/2026 12:06:58] "[36mGET /assets/bg.png HTTP/1.1[0m" 304 -
 127.0.0.1 - - [16/May/2026 12:06:58] "GET /api/entries HTTP/1.1" 200 -
 127.0.0.1 - - [16/May/2026 12:07:01] "GET /api/entries/deleted HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:08:11] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:11] "[36mGET /js/quotes.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:11] "[36mGET /css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:11] "GET /js/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:08:11] "GET /api/user_info HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:08:11] "[36mGET /assets/bg.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:11] "GET /api/entries HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:08:14] "GET /api/entries/deleted HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:08:49] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:49] "[36mGET /css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:49] "[36mGET /js/quotes.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:49] "[36mGET /js/app.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:49] "GET /api/user_info HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:08:49] "[36mGET /assets/bg.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:08:49] "GET /api/entries HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:09:28] "[31m[1mPOST /api/data/wipe/request HTTP/1.1[0m" 400 -
+127.0.0.1 - - [16/May/2026 12:10:55] "POST /api/logout HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:10:55] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:10:55] "[36mGET /css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:10:55] "[36mGET /js/quotes.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:10:55] "[36mGET /js/app.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:10:55] "GET /api/user_info HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:10:55] "[36mGET /assets/bg.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:11:30] "[31m[1mPOST /api/login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [16/May/2026 12:12:37] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:12:37] "GET /api/entries HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:12:50] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:12:50] "[36mGET /css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:12:50] "[36mGET /js/quotes.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:12:50] "[36mGET /js/app.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:12:50] "GET /api/user_info HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:12:50] "[36mGET /assets/bg.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:12:50] "GET /api/entries HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:13:59] "[31m[1mPOST /api/data/wipe/request HTTP/1.1[0m" 400 -
+127.0.0.1 - - [16/May/2026 12:15:01] "POST /api/logout HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:15:01] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:15:01] "[36mGET /css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:15:01] "[36mGET /js/quotes.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:15:01] "[36mGET /js/app.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:15:01] "GET /api/user_info HTTP/1.1" 200 -
+127.0.0.1 - - [16/May/2026 12:15:01] "[36mGET /assets/bg.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [16/May/2026 12:16:45] "[35m[1mPOST /api/otp/send HTTP/1.1[0m" 500 -
+ * Detected change in '/home/ashish/Documents/Diary/app.py', reloading
+Using Local JSON Database
+Failed to send email: Server not connected
+ * Restarting with stat
+/home/ashish/Documents/Diary/app.py:663: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow().isoformat()
+/home/ashish/Documents/Diary/app.py:733: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_dt = datetime.datetime.utcnow()
+ * Debugger is active!
+ * Debugger PIN: 169-795-215

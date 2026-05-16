@@ -1477,7 +1477,6 @@ async function loadDeletedEntries() {
   const restoreAllSec = document.getElementById("trashRestoreAllSection");
   
   // Show Restore All section if a wipe is scheduled
-  console.log("DEBUG: wipe_scheduled =", currentUser.data_wipe_scheduled);
   if (restoreAllSec) {
     restoreAllSec.style.display = currentUser.data_wipe_scheduled ? "block" : "none";
   }

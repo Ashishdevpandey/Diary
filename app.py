@@ -1134,7 +1134,6 @@ def update_entry(entry_id):
 def delete_entry(entry_id):
     if not DATABASE_URL:
         db = load_json_db()
-        print(f"DEBUG Delete: entry_id={entry_id} (type={type(entry_id)}), current_user.id={current_user.id} (type={type(current_user.id)})")
         for e in db['entries']:
             if e['id'] == entry_id and e.get('user_id') == current_user.id:
                 e['deleted_at'] = datetime.datetime.utcnow().isoformat()
@@ -1185,7 +1184,6 @@ def restore_entry(entry_id):
     try:
         if not DATABASE_URL:
             db = load_json_db()
-            print(f"DEBUG Restore: entry_id={entry_id} (type={type(entry_id)}), current_user.id={current_user.id} (type={type(current_user.id)})")
             for e in db['entries']:
                 if e['id'] == entry_id and e.get('user_id') == current_user.id:
                     e['deleted_at'] = None
