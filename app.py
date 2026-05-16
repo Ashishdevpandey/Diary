@@ -1000,13 +1000,20 @@ def data_wipe_restore():
                 u['data_wipe_scheduled'] = False
                 u['data_wipe_date'] = None
                 u['data_wipe_confirmed_at'] = None
+        # Also restore individual entries in trash
+        for e in db['entries']:
+            if e.get('user_id') == current_user.id:
+                e['deleted_at'] = None
         save_json_db(db)
     else:
         conn = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
+            # Restore account wipe status
             cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL, data_wipe_confirmed_at=NULL WHERE id=%s", (current_user.id,))
+            # Also restore individual entries in trash
+            cur.execute("UPDATE entries SET deleted_at = NULL WHERE user_id = %s", (current_user.id,))
             conn.commit()
             cur.close()
         finally:
