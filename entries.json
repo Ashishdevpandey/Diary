@@ -14,7 +14,9 @@
         {
             "id": 111111,
             "username": "abc",
-            "password_hash": "$2b$12$hkNcv7k5ztUNJwWC7e0NO.GMAN8UkrPb65WuPprrdSWZAKsZgo1Ni"
+            "password_hash": "$2b$12$hkNcv7k5ztUNJwWC7e0NO.GMAN8UkrPb65WuPprrdSWZAKsZgo1Ni",
+            "data_wipe_scheduled": false,
+            "data_wipe_date": null
         }
     ],
     "entries": [

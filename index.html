@@ -217,6 +217,16 @@
     </button>
   </div>
   <div id="entriesList" class="entries-list"></div>
+  <div id="restoreDataBanner" class="restore-banner">
+    <div class="rb-content">
+      <div class="rb-icon">⏳</div>
+      <h3>Data Wipe Scheduled</h3>
+      <p>Your diary entries are currently hidden and scheduled for permanent deletion.</p>
+      <div id="wipeCountdown" class="rb-date"></div>
+      <button class="mbtn-save" onclick="restoreWipedData()" style="width: 100%; margin-top: 15px;">✨ Restore My Data</button>
+    </div>
+  </div>
+  <button class="fab" onclick="openNewEntry()" title="New Entry">＋</button>
   <button class="fab" onclick="openNewEntry()" title="New Entry">＋</button>
 </section>
 
@@ -365,7 +375,7 @@
       <label class="mlabel" style="display:block; margin-bottom: 10px; font-weight: 600;">Data Management</label>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <button class="mbtn-ghost" onclick="exportData()">📥 Export as PDF</button>
-        <button class="mbtn-ghost" onclick="clearAllData()" style="color: #a33; border-color: #ecc;">🗑️ Wipe All Data</button>
+        <button class="mbtn-ghost" onclick="openWipeData()" style="color: #a33; border-color: #ecc;">🗑️ Wipe All Data</button>
       </div>
     </div>
     <div style="padding-top: 16px; border-top: 1px solid var(--border2); margin-top: 6px;">
@@ -421,6 +431,40 @@
       </p>
     </div>
 
+  </div>
+</div>
+
+<!-- WIPE DATA MODAL -->
+<div class="overlay" id="wipeDataModal">
+  <div class="modal" onclick="event.stopPropagation()" style="width:420px; text-align:center;">
+    <div id="wipeStep1">
+      <div style="font-size: 52px; margin-bottom: 10px;">🗑️</div>
+      <h3 style="font-family:'Playfair Display',serif; color:var(--ink); margin-bottom:8px;">Wipe All Data?</h3>
+      <p style="color:var(--muted); font-size:13px; line-height:1.7; margin-bottom:24px;">
+        This will hide all your diary entries immediately.<br><br>
+        You will have <strong>5 days</strong> to restore them, after which they will be <strong>permanently deleted</strong>.
+      </p>
+      <div id="wipeStep1Error" class="auth-error"></div>
+      <button class="auth-btn" style="background:#c0392b; margin-bottom:10px;" onclick="requestWipeOTP()">Send Verification Code</button>
+      <button class="mbtn-ghost" style="width:100%;" onclick="closeWipeData()">Cancel</button>
+    </div>
+
+    <div id="wipeStep2" style="display:none;">
+      <div style="font-size: 40px; margin-bottom: 10px;">📬</div>
+      <h3 style="font-family:'Playfair Display',serif; color:var(--ink); margin-bottom:8px;">Verify Wipe</h3>
+      <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Enter the code sent to your email to confirm.</p>
+      <div class="otp-container" id="wipeOtpContainer">
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+        <input type="tel" class="otp-box" maxlength="1" />
+      </div>
+      <div id="wipeOtpError" class="auth-error" style="margin-bottom:14px;"></div>
+      <button class="auth-btn" style="background:#c0392b; margin-bottom:10px;" onclick="confirmWipe()">Confirm Wipe</button>
+      <button class="mbtn-ghost" style="width:100%;" onclick="closeWipeData()">Cancel</button>
+    </div>
   </div>
 </div>
 

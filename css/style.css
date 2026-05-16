@@ -1678,5 +1678,60 @@ body.theme-dark .sres-item:hover {
 }
 
 body.theme-dark .rcard {
+  background: rgba(34, 30, 26, 0.4);
+}
+
+/* ─── RESTORE DATA BANNER ─────────────────────────────────── */
+.restore-banner {
+  display: none;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--p0);
+  z-index: 100;
+  padding: 40px 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.rb-content {
+  max-width: 320px;
+  margin: 60px auto;
+  padding: 30px;
+  background: var(--p1);
+  border: 1px solid var(--border1);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.rb-icon {
+  font-size: 50px;
+  margin-bottom: 20px;
+}
+
+.rb-content h3 {
+  font-family: 'Playfair Display', serif;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.rb-content p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.rb-date {
+  font-weight: 600;
+  color: #a33;
+  margin-bottom: 20px;
+}
+
+body.theme-dark .rb-content {
+  background: #1a1714;
+}
   background: rgba(34, 30, 26, 0.6);
 }

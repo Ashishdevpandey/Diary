@@ -151,6 +151,8 @@ def init_db():
                 password_hash TEXT NOT NULL,
                 deletion_scheduled BOOLEAN DEFAULT FALSE,
                 deletion_date TIMESTAMP WITH TIME ZONE,
+                data_wipe_scheduled BOOLEAN DEFAULT FALSE,
+                data_wipe_date TIMESTAMP WITH TIME ZONE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         """)
@@ -160,6 +162,10 @@ def init_db():
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='deletion_scheduled') THEN
                     ALTER TABLE users ADD COLUMN deletion_scheduled BOOLEAN DEFAULT FALSE;
                     ALTER TABLE users ADD COLUMN deletion_date TIMESTAMP WITH TIME ZONE;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='data_wipe_scheduled') THEN
+                    ALTER TABLE users ADD COLUMN data_wipe_scheduled BOOLEAN DEFAULT FALSE;
+                    ALTER TABLE users ADD COLUMN data_wipe_date TIMESTAMP WITH TIME ZONE;
                 END IF;
             END $$;
         """)
@@ -454,7 +460,15 @@ def login():
                     _send_welcome_back_email(user_data['email'], user_data['username'])
             user = User(user_data['id'], user_data['username'])
             login_user(user, remember=True)
-            resp = {"message": "Logged in", "user": {"id": user.id, "username": user.username}}
+            resp = {
+                "message": "Logged in", 
+                "user": {
+                    "id": user.id, 
+                    "username": user.username,
+                    "data_wipe_scheduled": user_data.get('data_wipe_scheduled', False),
+                    "data_wipe_date": user_data.get('data_wipe_date')
+                }
+            }
             if welcomed_back:
                 resp["welcomed_back"] = True
             return jsonify(resp)
@@ -479,7 +493,15 @@ def login():
                     _send_welcome_back_email(row['email'], row['username'])
             user = User(row['id'], row['username'])
             login_user(user, remember=True)
-            resp = {"message": "Logged in", "user": {"id": user.id, "username": user.username}}
+            resp = {
+                "message": "Logged in", 
+                "user": {
+                    "id": user.id, 
+                    "username": user.username,
+                    "data_wipe_scheduled": row.get('data_wipe_scheduled', False),
+                    "data_wipe_date": row.get('data_wipe_date').isoformat() if row.get('data_wipe_date') else None
+                }
+            }
             if welcomed_back:
                 resp["welcomed_back"] = True
             return jsonify(resp)
@@ -498,7 +520,39 @@ def logout():
 @app.route('/api/user_info')
 def user_info():
     if current_user.is_authenticated:
-        return jsonify({"authenticated": True, "user": {"id": current_user.id, "username": current_user.username}})
+        u_id = current_user.id
+        wipe_scheduled = False
+        wipe_date = None
+        
+        if not DATABASE_URL:
+            db = load_json_db()
+            user_data = next((u for u in db['users'] if u['id'] == u_id), None)
+            if user_data:
+                wipe_scheduled = user_data.get('data_wipe_scheduled', False)
+                wipe_date = user_data.get('data_wipe_date')
+        else:
+            conn = None
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute("SELECT data_wipe_scheduled, data_wipe_date FROM users WHERE id = %s", (u_id,))
+                row = cur.fetchone()
+                if row:
+                    wipe_scheduled = row['data_wipe_scheduled']
+                    wipe_date = row['data_wipe_date'].isoformat() if row['data_wipe_date'] else None
+                cur.close()
+            finally:
+                if conn: release_db_connection(conn)
+
+        return jsonify({
+            "authenticated": True, 
+            "user": {
+                "id": u_id, 
+                "username": current_user.username,
+                "data_wipe_scheduled": wipe_scheduled,
+                "data_wipe_date": wipe_date
+            }
+        })
     return jsonify({"authenticated": False}), 200
 
 @app.route('/api/health')
@@ -570,6 +624,20 @@ def _send_deleted_email(email, username):
     </div>
     """
     send_email(email, subject, body, image_filename='Farewell.png')
+    
+def _send_data_wipe_email(email, username, date_str):
+    subject = "Your data has been scheduled for wiping — Ink & Impressions"
+    body = f"""
+    <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+      <h2 style="color: #6b4c2a; margin: 0;">Data Wipe Scheduled</h2>
+      <p>Dear <b>{username}</b>,</p>
+      <p>As requested, your diary entries have been scheduled for wiping.</p>
+      <p>Your data will be permanently deleted on <b>{date_str}</b>.</p>
+      <p>If this was a mistake, you can log in to your account anytime before then and click "Restore Data" to cancel this process.</p>
+      <p style="margin-top:24px;font-style:italic;color:#6b4c2a;">Take care. 🪶</p>
+    </div>
+    """
+    send_email(email, subject, body, image_filename='Deletion request.png')
 
 def run_cleanup():
     """Performs the 14-day grace period cleanup once. 
@@ -589,13 +657,25 @@ def run_cleanup():
                 db['entries'] = [e for e in db['entries'] if e.get('user_id') != u['id']]
                 if u.get('email'):
                     _send_deleted_email(u['email'], u['username'])
-            if to_delete:
+            
+            to_wipe = []
+            for u in db['users']:
+                if u.get('data_wipe_scheduled') and u.get('data_wipe_date'):
+                    if u['data_wipe_date'] < now:
+                        to_wipe.append(u)
+            for u in to_wipe:
+                db['entries'] = [e for e in db['entries'] if e.get('user_id') != u['id']]
+                u['data_wipe_scheduled'] = False
+                u['data_wipe_date'] = None
+
+            if to_delete or to_wipe:
                 save_json_db(db)
         else:
             conn = None
             try:
                 conn = get_db_connection()
                 cur = conn.cursor()
+                # Account deletions
                 cur.execute("SELECT id, username, email FROM users WHERE deletion_scheduled=TRUE AND deletion_date < NOW()")
                 rows = cur.fetchall()
                 for row in rows:
@@ -603,6 +683,13 @@ def run_cleanup():
                     cur.execute("DELETE FROM users WHERE id=%s", (row['id'],))
                     if row.get('email'):
                         _send_deleted_email(row['email'], row['username'])
+                # Data wipes
+                cur.execute("SELECT id FROM users WHERE data_wipe_scheduled=TRUE AND data_wipe_date < NOW()")
+                wipe_rows = cur.fetchall()
+                for row in wipe_rows:
+                    cur.execute("DELETE FROM entries WHERE user_id=%s", (row['id'],))
+                    cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL WHERE id=%s", (row['id'],))
+                
                 conn.commit()
                 cur.close()
             finally:
@@ -757,6 +844,121 @@ def account_delete_confirm():
     _send_farewell_email(email, user_data['username'])
     logout_user()
     return jsonify({"message": "Account scheduled for deletion"})
+
+@app.route('/api/data/wipe/request', methods=['POST'])
+@login_required
+def data_wipe_request():
+    if not DATABASE_URL:
+        db = load_json_db()
+        user_data = next((u for u in db['users'] if u['id'] == current_user.id), None)
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT email, username FROM users WHERE id=%s", (current_user.id,))
+            user_data = cur.fetchone()
+            cur.close()
+        finally:
+            if conn: release_db_connection(conn)
+
+    if not user_data or not user_data.get('email'):
+        return jsonify({"error": "No email on file. Cannot verify wipe."}), 400
+
+    otp = f"{random.randint(100000, 999999)}"
+    otp_store[user_data['email']] = {"otp": otp, "expiry": time.time() + 300}
+
+    subject = "Confirm Data Wipe — Ink & Impressions"
+    body = f"""
+    <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+      <h2 style="color: #6b4c2a; margin: 0;">Confirm Data Wipe</h2>
+      <p>Hello <b>{user_data['username']}</b>,</p>
+      <p>Use the code below to confirm wiping all your diary data:</p>
+      <div style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#6b4c2a;text-align:center;background:rgba(255,255,255,0.5);padding:12px;border-radius:8px;margin:20px 0;">{otp}</div>
+      <p>This code expires in 5 minutes.</p>
+    </div>
+    """
+    success, err_msg = send_email(user_data['email'], subject, body, image_filename='Deletion request.png')
+    if success:
+        return jsonify({"message": "OTP sent successfully"})
+    else:
+        return jsonify({"error": f"Failed to send OTP: {err_msg}"}), 500
+
+@app.route('/api/data/wipe/confirm', methods=['POST'])
+@login_required
+def data_wipe_confirm():
+    import datetime
+    data = request.json
+    otp = data.get('otp')
+
+    if not DATABASE_URL:
+        db = load_json_db()
+        user_data = next((u for u in db['users'] if u['id'] == current_user.id), None)
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT email, username FROM users WHERE id=%s", (current_user.id,))
+            user_data = cur.fetchone()
+            cur.close()
+        finally:
+            if conn: release_db_connection(conn)
+
+    if not user_data or not user_data.get('email'):
+        return jsonify({"error": "No email on file"}), 400
+
+    email = user_data['email']
+    stored = otp_store.get(email)
+    if not stored or stored['otp'] != otp or time.time() > stored['expiry']:
+        return jsonify({"error": "Invalid or expired OTP"}), 400
+    del otp_store[email]
+
+    wipe_date = (datetime.datetime.utcnow() + datetime.timedelta(days=5)).isoformat()
+
+    if not DATABASE_URL:
+        for u in db['users']:
+            if u['id'] == current_user.id:
+                u['data_wipe_scheduled'] = True
+                u['data_wipe_date'] = wipe_date
+        save_json_db(db)
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE users SET data_wipe_scheduled=TRUE, data_wipe_date=%s WHERE id=%s",
+                        (wipe_date, current_user.id))
+            conn.commit()
+            cur.close()
+        finally:
+            if conn: release_db_connection(conn)
+
+    _send_data_wipe_email(email, user_data['username'], wipe_date)
+    return jsonify({"message": "Data wipe scheduled", "data_wipe_date": wipe_date})
+
+@app.route('/api/data/wipe/restore', methods=['POST'])
+@login_required
+def data_wipe_restore():
+    if not DATABASE_URL:
+        db = load_json_db()
+        for u in db['users']:
+            if u['id'] == current_user.id:
+                u['data_wipe_scheduled'] = False
+                u['data_wipe_date'] = None
+        save_json_db(db)
+    else:
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL WHERE id=%s", (current_user.id,))
+            conn.commit()
+            cur.close()
+        finally:
+            if conn: release_db_connection(conn)
+            
+    return jsonify({"message": "Data restored successfully"})
 
 @app.route('/api/entries', methods=['GET'])
 @login_required

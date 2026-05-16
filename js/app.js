@@ -124,24 +124,32 @@ async function initApp(welcomedBack = false) {
   document.getElementById("authOverlay").classList.remove("open");
   document.getElementById("logoutBtn").style.display = "flex";
   
-  await loadEntries();
   const now = new Date();
   calYear = now.getFullYear();
   calMonth = now.getMonth();
 
-  renderCalendar();
-  renderMoodChart();
-  renderStreak();
-  renderTagCloud();
-  renderMemories();
-
-  if (entries.length > 0 && window.innerWidth > 900) {
-    selectEntry(entries[0].id);
-  } else if (entries.length > 0) {
-    // On mobile, just show the list (stay on dashboard)
-    showWelcome();
-  } else {
+  if (currentUser.data_wipe_scheduled) {
+    document.getElementById("restoreDataBanner").style.display = "block";
+    const wipeDate = new Date(currentUser.data_wipe_date);
+    document.getElementById("wipeCountdown").innerText = `Scheduled for permanent deletion on: ${wipeDate.toLocaleDateString()} at ${wipeDate.toLocaleTimeString()}`;
     showEmpty();
+  } else {
+    document.getElementById("restoreDataBanner").style.display = "none";
+    await loadEntries();
+    
+    renderCalendar();
+    renderMoodChart();
+    renderStreak();
+    renderTagCloud();
+    renderMemories();
+
+    if (entries.length > 0 && window.innerWidth > 900) {
+      selectEntry(entries[0].id);
+    } else if (entries.length > 0) {
+      showWelcome();
+    } else {
+      showEmpty();
+    }
   }
 
   if (welcomedBack) {
@@ -157,6 +165,11 @@ function showAuth() {
 }
 
 async function loadEntries() {
+  if (currentUser.data_wipe_scheduled) {
+    entries = [];
+    renderList();
+    return;
+  }
   try {
     const res = await fetch('/api/entries');
     if (res.status === 401) return showAuth();
@@ -568,7 +581,7 @@ function renderCalendar() {
     for (let i = 0; i < blanks; i++) {
       const c = document.createElement("div");
       c.className = "cday empty";
-      c.textContent = "0";
+      c.textContent = "";
       grid.appendChild(c);
     }
 
@@ -1351,3 +1364,98 @@ document.querySelectorAll(".overlay").forEach(el => {
     }
   });
 });
+
+/* ─── DATA WIPE LOGIC ────────────────────────────────────── */
+function openWipeData() {
+  closeSettings();
+  document.getElementById("wipeStep1").style.display = "block";
+  document.getElementById("wipeStep2").style.display = "none";
+  document.getElementById("wipeStep1Error").textContent = "";
+  document.getElementById("wipeOtpError").textContent = "";
+  document.getElementById("wipeDataModal").classList.add("open");
+}
+
+function closeWipeData() {
+  document.getElementById("wipeDataModal").classList.remove("open");
+}
+
+async function requestWipeOTP() {
+  const err = document.getElementById("wipeStep1Error");
+  err.textContent = "";
+  try {
+    const res = await fetch('/api/data/wipe/request', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById("wipeStep1").style.display = "none";
+      document.getElementById("wipeStep2").style.display = "block";
+      setupOtpInput("wipeOtpContainer");
+    } else {
+      err.textContent = data.error || "Failed to send OTP.";
+    }
+  } catch (e) {
+    err.textContent = "Server error. Try again.";
+  }
+}
+
+async function confirmWipe() {
+  const err = document.getElementById("wipeOtpError");
+  err.textContent = "";
+  const otp = Array.from(document.querySelectorAll("#wipeOtpContainer .otp-box")).map(i => i.value).join("");
+  if (otp.length < 6) {
+    err.textContent = "Please enter all 6 digits.";
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/data/wipe/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ otp })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      currentUser.data_wipe_scheduled = true;
+      currentUser.data_wipe_date = data.data_wipe_date;
+      closeWipeData();
+      initApp();
+    } else {
+      err.textContent = data.error || "Verification failed.";
+    }
+  } catch (e) {
+    err.textContent = "Server error. Try again.";
+  }
+}
+
+async function restoreWipedData() {
+  try {
+    const res = await fetch('/api/data/wipe/restore', { method: 'POST' });
+    if (res.ok) {
+      currentUser.data_wipe_scheduled = false;
+      currentUser.data_wipe_date = null;
+      initApp();
+    } else {
+      alert("Failed to restore data.");
+    }
+  } catch (e) {
+    alert("Connection error.");
+  }
+}
+
+/* Helper for OTP inputs */
+function setupOtpInput(containerId) {
+  const inputs = document.querySelectorAll(`#${containerId} .otp-box`);
+  inputs.forEach((input, index) => {
+    input.value = "";
+    input.addEventListener("input", (e) => {
+      if (e.target.value.length === 1 && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !e.target.value && index > 0) {
+        inputs[index - 1].focus();
+      }
+    });
+  });
+  if (inputs.length > 0) inputs[0].focus();
+}
