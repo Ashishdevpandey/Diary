@@ -172,6 +172,9 @@ def init_db():
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='data_wipe_confirmed_at') THEN
                     ALTER TABLE users ADD COLUMN data_wipe_confirmed_at TIMESTAMP WITH TIME ZONE;
                 END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='entries' AND column_name='deleted_at') THEN
+                    ALTER TABLE entries ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+                END IF;
             END $$;
         """)
         # Create entries table with user_id
@@ -187,7 +190,8 @@ def init_db():
                 tags JSONB,
                 notes JSONB,
                 starred BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                deleted_at TIMESTAMP WITH TIME ZONE
             );
         """)
         # Check if user_id column exists, if not add it (migration)
@@ -713,10 +717,32 @@ def run_cleanup():
                         cur.execute("DELETE FROM entries WHERE user_id=%s", (row['id'],))
                     cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL, data_wipe_confirmed_at=NULL WHERE id=%s", (row['id'],))
                 
+                # Permanent deletion of entries in Trash after 5 days
+                cur.execute("DELETE FROM entries WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '5 days'")
+                
                 conn.commit()
                 cur.close()
             finally:
                 if conn: release_db_connection(conn)
+        
+        # JSON DB trash purge
+        if not DATABASE_URL:
+            db = load_json_db()
+            import datetime
+            now_dt = datetime.datetime.utcnow()
+            new_entries = []
+            for e in db['entries']:
+                if e.get('deleted_at'):
+                    d_str = e['deleted_at'].replace('Z', '+00:00')
+                    d_at = datetime.datetime.fromisoformat(d_str)
+                    if (now_dt - d_at.replace(tzinfo=None)).days < 5:
+                        new_entries.append(e)
+                else:
+                    new_entries.append(e)
+            if len(new_entries) != len(db['entries']):
+                db['entries'] = new_entries
+                save_json_db(db)
+
     except Exception as ex:
         print(f"Cleanup error: {ex}")
 
@@ -992,14 +1018,14 @@ def data_wipe_restore():
 def get_entries():
     if not DATABASE_URL:
         db = load_json_db()
-        user_entries = [e for e in db['entries'] if e.get('user_id') == current_user.id]
+        user_entries = [e for e in db['entries'] if e.get('user_id') == current_user.id and not e.get('deleted_at')]
         return jsonify(user_entries)
     
     conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM entries WHERE user_id = %s ORDER BY id DESC", (current_user.id,))
+        cur.execute("SELECT * FROM entries WHERE user_id = %s AND deleted_at IS NULL ORDER BY id DESC", (current_user.id,))
         rows = cur.fetchall()
         cur.close()
         return jsonify([dict(r) for r in rows])
@@ -1107,7 +1133,9 @@ def update_entry(entry_id):
 def delete_entry(entry_id):
     if not DATABASE_URL:
         db = load_json_db()
-        db['entries'] = [e for e in db['entries'] if not (e['id'] == entry_id and e.get('user_id') == current_user.id)]
+        for e in db['entries']:
+            if e['id'] == entry_id and e.get('user_id') == current_user.id:
+                e['deleted_at'] = datetime.datetime.utcnow().isoformat()
         save_json_db(db)
         return '', 204
 
@@ -1115,7 +1143,7 @@ def delete_entry(entry_id):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("DELETE FROM entries WHERE id = %s AND user_id = %s", (entry_id, current_user.id))
+        cur.execute("UPDATE entries SET deleted_at = NOW() WHERE id = %s AND user_id = %s", (entry_id, current_user.id))
         conn.commit()
         cur.close()
         return '', 204
@@ -1124,6 +1152,51 @@ def delete_entry(entry_id):
     finally:
         if conn:
             release_db_connection(conn)
+
+@app.route('/api/entries/deleted', methods=['GET'])
+@login_required
+def get_deleted_entries():
+    if not DATABASE_URL:
+        db = load_json_db()
+        deleted = [e for e in db['entries'] if e.get('user_id') == current_user.id and e.get('deleted_at')]
+        return jsonify(deleted)
+    
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM entries WHERE user_id = %s AND deleted_at IS NOT NULL ORDER BY deleted_at DESC", (current_user.id,))
+        rows = cur.fetchall()
+        cur.close()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn: release_db_connection(conn)
+
+@app.route('/api/entries/<int:entry_id>/restore', methods=['POST'])
+@login_required
+def restore_entry(entry_id):
+    if not DATABASE_URL:
+        db = load_json_db()
+        for e in db['entries']:
+            if e['id'] == entry_id and e.get('user_id') == current_user.id:
+                e['deleted_at'] = None
+        save_json_db(db)
+        return jsonify({"message": "Entry restored"})
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE entries SET deleted_at = NULL WHERE id = %s AND user_id = %s", (entry_id, current_user.id))
+        conn.commit()
+        cur.close()
+        return jsonify({"message": "Entry restored"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn: release_db_connection(conn)
 
 @app.route('/')
 def index():

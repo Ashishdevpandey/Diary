@@ -1461,3 +1461,86 @@ function setupOtpInput(containerId) {
   });
   if (inputs.length > 0) inputs[0].focus();
 }
+
+async function openRecentlyDeleted() {
+  document.getElementById("recentlyDeletedModal").classList.add("open");
+  await loadDeletedEntries();
+}
+
+function closeRecentlyDeleted() {
+  document.getElementById("recentlyDeletedModal").classList.remove("open");
+}
+
+async function loadDeletedEntries() {
+  const list = document.getElementById("deletedEntriesList");
+  const empty = document.getElementById("noDeletedMessage");
+  list.innerHTML = "";
+  
+  try {
+    const res = await fetch('/api/entries/deleted');
+    const deleted = await res.json();
+    
+    if (!deleted || deleted.length === 0) {
+      list.style.display = "none";
+      empty.style.display = "block";
+      return;
+    }
+    
+    list.style.display = "block";
+    empty.style.display = "none";
+    
+    deleted.forEach(e => {
+      const row = document.createElement("div");
+      row.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);";
+      
+      const info = document.createElement("div");
+      info.style.flex = "1";
+      
+      const title = document.createElement("div");
+      title.style.fontWeight = "600";
+      title.style.fontSize = "14px";
+      title.textContent = e.title || "Untitled Entry";
+      
+      const date = document.createElement("div");
+      date.style.fontSize = "11px";
+      date.style.color = "var(--muted)";
+      
+      const dAt = new Date(e.deleted_at);
+      const expires = new Date(dAt.getTime() + (5 * 24 * 60 * 60 * 1000));
+      const diff = Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24));
+      
+      date.textContent = `Deleted on ${dAt.toLocaleDateString()} • Permanent deletion in ${diff} days`;
+      
+      info.appendChild(title);
+      info.appendChild(date);
+      
+      const btn = document.createElement("button");
+      btn.className = "mbtn-ghost";
+      btn.style.cssText = "font-size: 11px; padding: 4px 10px; border-color: #27ae60; color: #27ae60;";
+      btn.textContent = "Restore";
+      btn.onclick = () => restoreEntry(e.id);
+      
+      row.appendChild(info);
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Failed to load deleted entries:", err);
+  }
+}
+
+async function restoreEntry(id) {
+  try {
+    const res = await fetch(`/api/entries/${id}/restore`, { method: 'POST' });
+    if (res.ok) {
+      await loadDeletedEntries();
+      await loadEntries();
+      renderCalendar();
+      renderMoodChart();
+    } else {
+      alert("Restore failed.");
+    }
+  } catch (err) {
+    alert("Connection error.");
+  }
+}
