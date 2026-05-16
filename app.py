@@ -1157,47 +1157,53 @@ def delete_entry(entry_id):
 @app.route('/api/entries/deleted', methods=['GET'])
 @login_required
 def get_deleted_entries():
-    if not DATABASE_URL:
-        db = load_json_db()
-        deleted = [e for e in db['entries'] if e.get('user_id') == current_user.id and e.get('deleted_at')]
-        return jsonify(deleted)
-    
-    conn = None
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM entries WHERE user_id = %s AND deleted_at IS NOT NULL ORDER BY deleted_at DESC", (current_user.id,))
-        rows = cur.fetchall()
-        cur.close()
-        return jsonify([dict(r) for r in rows])
+        if not DATABASE_URL:
+            db = load_json_db()
+            deleted = [e for e in db['entries'] if e.get('user_id') == current_user.id and e.get('deleted_at')]
+            return jsonify(deleted)
+        
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM entries WHERE user_id = %s AND deleted_at IS NOT NULL ORDER BY deleted_at DESC", (current_user.id,))
+            rows = cur.fetchall()
+            cur.close()
+            return jsonify([dict(r) for r in rows])
+        finally:
+            if conn: release_db_connection(conn)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-    finally:
-        if conn: release_db_connection(conn)
 
 @app.route('/api/entries/<int:entry_id>/restore', methods=['POST'])
 @login_required
 def restore_entry(entry_id):
-    if not DATABASE_URL:
-        db = load_json_db()
-        for e in db['entries']:
-            if e['id'] == entry_id and e.get('user_id') == current_user.id:
-                e['deleted_at'] = None
-        save_json_db(db)
-        return jsonify({"message": "Entry restored"})
-
-    conn = None
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("UPDATE entries SET deleted_at = NULL WHERE id = %s AND user_id = %s", (entry_id, current_user.id))
-        conn.commit()
-        cur.close()
-        return jsonify({"message": "Entry restored"})
+        if not DATABASE_URL:
+            db = load_json_db()
+            for e in db['entries']:
+                if e['id'] == entry_id and e.get('user_id') == current_user.id:
+                    e['deleted_at'] = None
+            save_json_db(db)
+            return jsonify({"message": "Entry restored"})
+
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE entries SET deleted_at = NULL WHERE id = %s AND user_id = %s", (entry_id, current_user.id))
+            conn.commit()
+            cur.close()
+            return jsonify({"message": "Entry restored"})
+        finally:
+            if conn: release_db_connection(conn)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-    finally:
-        if conn: release_db_connection(conn)
 
 @app.route('/')
 def index():
