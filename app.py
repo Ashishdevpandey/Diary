@@ -653,6 +653,19 @@ def _send_data_wipe_email(email, username, date_str):
     """
     send_email(email, subject, body, image_filename='Deletion request.png')
 
+def _send_restore_confirmation_email(email, username):
+    subject = "Your data has been successfully restored — Ink & Impressions"
+    body = f"""
+    <div style="font-family:'Lora',serif;padding:30px;background:#f0f9eb;border:1px solid #c3e6cb;border-radius:12px;color:#155724;max-width:480px;margin:auto;">
+      <h2 style="color: #28a745; margin: 0;">Data Restored Successfully</h2>
+      <p>Dear <b>{username}</b>,</p>
+      <p>Great news! Your diary data has been successfully restored, and the scheduled wipe has been cancelled.</p>
+      <p>All your entries and trashed items are back in your account.</p>
+      <p style="margin-top:24px;font-style:italic;color:#28a745;">Happy writing! 🪶</p>
+    </div>
+    """
+    send_email(email, subject, body, image_filename='Deletion request.png')
+
 def run_cleanup():
     """Performs the 14-day grace period cleanup once. 
     Called during normal requests since Vercel doesn't support background threads."""
@@ -993,6 +1006,9 @@ def data_wipe_confirm():
 @app.route('/api/data/wipe/restore', methods=['POST'])
 @login_required
 def data_wipe_restore():
+    user_email = None
+    username = current_user.username
+    
     if not DATABASE_URL:
         db = load_json_db()
         for u in db['users']:
@@ -1000,6 +1016,7 @@ def data_wipe_restore():
                 u['data_wipe_scheduled'] = False
                 u['data_wipe_date'] = None
                 u['data_wipe_confirmed_at'] = None
+                user_email = u.get('email')
         # Also restore individual entries in trash
         for e in db['entries']:
             if e.get('user_id') == current_user.id:
@@ -1010,6 +1027,11 @@ def data_wipe_restore():
         try:
             conn = get_db_connection()
             cur = conn.cursor()
+            # Get email
+            cur.execute("SELECT email FROM users WHERE id = %s", (current_user.id,))
+            row = cur.fetchone()
+            if row: user_email = row['email']
+            
             # Restore account wipe status
             cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL, data_wipe_confirmed_at=NULL WHERE id=%s", (current_user.id,))
             # Also restore individual entries in trash
@@ -1019,6 +1041,9 @@ def data_wipe_restore():
         finally:
             if conn: release_db_connection(conn)
             
+    if user_email:
+        _send_restore_confirmation_email(user_email, username)
+        
     return jsonify({"message": "Data restored successfully"})
 
 @app.route('/api/entries', methods=['GET'])
