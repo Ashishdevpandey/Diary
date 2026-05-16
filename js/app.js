@@ -1474,6 +1474,14 @@ function closeRecentlyDeleted() {
 async function loadDeletedEntries() {
   const list = document.getElementById("deletedEntriesList");
   const empty = document.getElementById("noDeletedMessage");
+  const restoreAllSec = document.getElementById("trashRestoreAllSection");
+  
+  // Show Restore All section if a wipe is scheduled
+  console.log("DEBUG: wipe_scheduled =", currentUser.data_wipe_scheduled);
+  if (restoreAllSec) {
+    restoreAllSec.style.display = currentUser.data_wipe_scheduled ? "block" : "none";
+  }
+  
   list.innerHTML = "";
   
   try {
@@ -1491,32 +1499,34 @@ async function loadDeletedEntries() {
     
     deleted.forEach(e => {
       const row = document.createElement("div");
-      row.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);";
+      row.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border);";
       
       const info = document.createElement("div");
       info.style.flex = "1";
+      info.style.marginRight = "10px";
       
       const title = document.createElement("div");
-      title.style.fontWeight = "600";
-      title.style.fontSize = "14px";
+      title.style.cssText = "font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;";
       title.textContent = e.title || "Untitled Entry";
       
       const date = document.createElement("div");
-      date.style.fontSize = "11px";
+      date.style.fontSize = "10px";
       date.style.color = "var(--muted)";
       
       const dAt = new Date(e.deleted_at);
       const expires = new Date(dAt.getTime() + (5 * 24 * 60 * 60 * 1000));
       const diff = Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24));
       
-      date.textContent = `Deleted on ${dAt.toLocaleDateString()} • Permanent deletion in ${diff} days`;
+      const dateStr = dAt.toLocaleDateString();
+      const timeStr = dAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      date.textContent = `Deleted on ${dateStr} ${timeStr} • ${diff} days left`;
       
       info.appendChild(title);
       info.appendChild(date);
       
       const btn = document.createElement("button");
       btn.className = "mbtn-ghost";
-      btn.style.cssText = "font-size: 11px; padding: 4px 10px; border-color: #27ae60; color: #27ae60;";
+      btn.style.cssText = "font-size: 10px; padding: 3px 8px; border-color: #27ae60; color: #27ae60; white-space: nowrap;";
       btn.textContent = "Restore";
       btn.onclick = () => restoreEntry(e.id);
       

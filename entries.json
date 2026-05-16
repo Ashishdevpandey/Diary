@@ -30,7 +30,8 @@
             "date": "2026-05-16",
             "time": "11:16 AM",
             "starred": false,
-            "user_id": 111111
+            "user_id": 111111,
+            "deleted_at": "2026-05-16T06:23:04.559021"
         },
         {
             "title": "enc:TFzE3ZOOjy94aLKw+BYX2gizOUNaB+aZSMDdlEP4q4MY",
@@ -54,7 +55,8 @@
             "date": "2026-05-13",
             "time": "01:07 PM",
             "starred": false,
-            "user_id": 111111
+            "user_id": 111111,
+            "deleted_at": null
         },
         {
             "title": "My Secret Diary",
