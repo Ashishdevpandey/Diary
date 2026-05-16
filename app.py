@@ -643,7 +643,10 @@ def _send_data_wipe_email(email, username, date_str):
     subject = "Your data has been scheduled for wiping — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
-      <h2 style="color: #6b4c2a; margin: 0;">Data Wipe Scheduled</h2>
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+          <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 60px; border-radius: 6px; margin-right: 15px;">
+          <h2 style="color: #6b4c2a; margin: 0;">Data Wipe Scheduled</h2>
+      </div>
       <p>Dear <b>{username}</b>,</p>
       <p>As requested, your diary entries have been scheduled for wiping.</p>
       <p>Your data will be permanently deleted on <b>{date_str}</b>.</p>
@@ -651,20 +654,23 @@ def _send_data_wipe_email(email, username, date_str):
       <p style="margin-top:24px;font-style:italic;color:#6b4c2a;">Take care. 🪶</p>
     </div>
     """
-    send_email(email, subject, body, image_filename='Deletion request.png')
+    send_email(email, subject, body, image_filename='Mail.png')
 
 def _send_restore_confirmation_email(email, username):
     subject = "Your data has been successfully restored — Ink & Impressions"
     body = f"""
     <div style="font-family:'Lora',serif;padding:30px;background:#f0f9eb;border:1px solid #c3e6cb;border-radius:12px;color:#155724;max-width:480px;margin:auto;">
-      <h2 style="color: #28a745; margin: 0;">Data Restored Successfully</h2>
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+          <img src="cid:mail_header_image" alt="Ink & Impressions" style="max-width: 60px; border-radius: 6px; margin-right: 15px;">
+          <h2 style="color: #28a745; margin: 0;">Data Restored</h2>
+      </div>
       <p>Dear <b>{username}</b>,</p>
       <p>Great news! Your diary data has been successfully restored, and the scheduled wipe has been cancelled.</p>
       <p>All your entries and trashed items are back in your account.</p>
       <p style="margin-top:24px;font-style:italic;color:#28a745;">Happy writing! 🪶</p>
     </div>
     """
-    send_email(email, subject, body, image_filename=None)
+    send_email(email, subject, body, image_filename='Mail.png')
 
 def run_cleanup():
     """Performs the 14-day grace period cleanup once. 
