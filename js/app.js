@@ -1475,6 +1475,7 @@ async function loadDeletedEntries() {
   const list = document.getElementById("deletedEntriesList");
   const empty = document.getElementById("noDeletedMessage");
   const restoreAllSec = document.getElementById("trashRestoreAllSection");
+  const restoreTrashBtnSec = document.getElementById("trashRestoreButtonSection");
   
   // Show Restore All section if a wipe is scheduled
   if (restoreAllSec) {
@@ -1490,11 +1491,13 @@ async function loadDeletedEntries() {
     if (!deleted || deleted.length === 0) {
       list.style.display = "none";
       empty.style.display = "block";
+      if (restoreTrashBtnSec) restoreTrashBtnSec.style.display = "none";
       return;
     }
     
     list.style.display = "block";
     empty.style.display = "none";
+    if (restoreTrashBtnSec) restoreTrashBtnSec.style.display = "block";
     
     deleted.forEach(e => {
       const row = document.createElement("div");
@@ -1541,6 +1544,22 @@ async function loadDeletedEntries() {
 async function restoreEntry(id) {
   try {
     const res = await fetch(`/api/entries/${id}/restore`, { method: 'POST' });
+    if (res.ok) {
+      await loadDeletedEntries();
+      await loadEntries();
+      renderCalendar();
+      renderMoodChart();
+    } else {
+      alert("Restore failed.");
+    }
+  } catch (err) {
+    alert("Connection error.");
+  }
+}
+
+async function restoreAllTrash() {
+  try {
+    const res = await fetch('/api/entries/restore_all', { method: 'POST' });
     if (res.ok) {
       await loadDeletedEntries();
       await loadEntries();

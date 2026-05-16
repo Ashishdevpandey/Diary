@@ -527,6 +527,11 @@
       <button class="mbtn-ghost" style="width:100%; font-size:12px; border-color: var(--ink); color: var(--ink);" onclick="restoreWipedData(); closeRecentlyDeleted();">Restore All Old Data</button>
     </div>
 
+    <!-- Individual Trash Restore All -->
+    <div id="trashRestoreButtonSection" style="display:none; margin-bottom: 15px;">
+      <button class="mbtn-ghost" style="width:100%; font-size:11px; color: #27ae60; border-color: #27ae60;" onclick="restoreAllTrash()">Restore All Deleted Entries</button>
+    </div>
+
     <div id="deletedEntriesList" style="max-height: 350px; overflow-y: auto;">
       <!-- Compact items will appear here -->
     </div>

@@ -1212,6 +1212,33 @@ def restore_entry(entry_id):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/entries/restore_all', methods=['POST'])
+@login_required
+def restore_all_entries():
+    try:
+        if not DATABASE_URL:
+            db = load_json_db()
+            for e in db['entries']:
+                if e.get('user_id') == current_user.id:
+                    e['deleted_at'] = None
+            save_json_db(db)
+            return jsonify({"message": "All entries restored"})
+
+        conn = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE entries SET deleted_at = NULL WHERE user_id = %s", (current_user.id,))
+            conn.commit()
+            cur.close()
+            return jsonify({"message": "All entries restored"})
+        finally:
+            if conn: release_db_connection(conn)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')

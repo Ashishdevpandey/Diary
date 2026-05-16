@@ -96,3 +96,21 @@ Failed to send email: Server not connected
   now_dt = datetime.datetime.utcnow()
  * Debugger is active!
  * Debugger PIN: 169-795-215
+ * Detected change in '/home/ashish/Documents/Diary/app.py', reloading
+Using Local JSON Database
+ * Restarting with stat
+/home/ashish/Documents/Diary/app.py:663: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow().isoformat()
+/home/ashish/Documents/Diary/app.py:733: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_dt = datetime.datetime.utcnow()
+ * Debugger is active!
+ * Debugger PIN: 169-795-215
+ * Detected change in '/home/ashish/Documents/Diary/app.py', reloading
+Using Local JSON Database
+ * Restarting with stat
+/home/ashish/Documents/Diary/app.py:663: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow().isoformat()
+/home/ashish/Documents/Diary/app.py:733: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_dt = datetime.datetime.utcnow()
+ * Debugger is active!
+ * Debugger PIN: 169-795-215
