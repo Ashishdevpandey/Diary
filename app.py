@@ -153,6 +153,7 @@ def init_db():
                 deletion_date TIMESTAMP WITH TIME ZONE,
                 data_wipe_scheduled BOOLEAN DEFAULT FALSE,
                 data_wipe_date TIMESTAMP WITH TIME ZONE,
+                data_wipe_confirmed_at TIMESTAMP WITH TIME ZONE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         """)
@@ -166,6 +167,10 @@ def init_db():
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='data_wipe_scheduled') THEN
                     ALTER TABLE users ADD COLUMN data_wipe_scheduled BOOLEAN DEFAULT FALSE;
                     ALTER TABLE users ADD COLUMN data_wipe_date TIMESTAMP WITH TIME ZONE;
+                    ALTER TABLE users ADD COLUMN data_wipe_confirmed_at TIMESTAMP WITH TIME ZONE;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='data_wipe_confirmed_at') THEN
+                    ALTER TABLE users ADD COLUMN data_wipe_confirmed_at TIMESTAMP WITH TIME ZONE;
                 END IF;
             END $$;
         """)
@@ -478,7 +483,7 @@ def login():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, username, password_hash, email, deletion_scheduled, data_wipe_scheduled, data_wipe_date FROM users WHERE username = %s OR email = %s", (username, username))
+        cur.execute("SELECT id, username, password_hash, email, deletion_scheduled, data_wipe_scheduled, data_wipe_date, data_wipe_confirmed_at FROM users WHERE username = %s OR email = %s", (username, username))
         row = cur.fetchone()
         cur.close()
         if row and bcrypt.checkpw(password.encode('utf-8'), row['password_hash'].encode('utf-8')):
@@ -499,7 +504,8 @@ def login():
                     "id": user.id, 
                     "username": user.username,
                     "data_wipe_scheduled": row.get('data_wipe_scheduled', False),
-                    "data_wipe_date": row.get('data_wipe_date').isoformat() if row.get('data_wipe_date') else None
+                    "data_wipe_date": row.get('data_wipe_date').isoformat() if row.get('data_wipe_date') else None,
+                    "data_wipe_confirmed_at": row.get('data_wipe_confirmed_at').isoformat() if row.get('data_wipe_confirmed_at') else None
                 }
             }
             if welcomed_back:
@@ -530,16 +536,18 @@ def user_info():
             if user_data:
                 wipe_scheduled = user_data.get('data_wipe_scheduled', False)
                 wipe_date = user_data.get('data_wipe_date')
+                wipe_confirmed_at = user_data.get('data_wipe_confirmed_at')
         else:
             conn = None
             try:
                 conn = get_db_connection()
                 cur = conn.cursor()
-                cur.execute("SELECT data_wipe_scheduled, data_wipe_date FROM users WHERE id = %s", (u_id,))
+                cur.execute("SELECT data_wipe_scheduled, data_wipe_date, data_wipe_confirmed_at FROM users WHERE id = %s", (u_id,))
                 row = cur.fetchone()
                 if row:
                     wipe_scheduled = row['data_wipe_scheduled']
                     wipe_date = row['data_wipe_date'].isoformat() if row['data_wipe_date'] else None
+                    wipe_confirmed_at = row['data_wipe_confirmed_at'].isoformat() if row['data_wipe_confirmed_at'] else None
                 cur.close()
             finally:
                 if conn: release_db_connection(conn)
@@ -550,7 +558,8 @@ def user_info():
                 "id": u_id, 
                 "username": current_user.username,
                 "data_wipe_scheduled": wipe_scheduled,
-                "data_wipe_date": wipe_date
+                "data_wipe_date": wipe_date,
+                "data_wipe_confirmed_at": wipe_confirmed_at
             }
         })
     return jsonify({"authenticated": False}), 200
@@ -664,9 +673,20 @@ def run_cleanup():
                     if u['data_wipe_date'] < now:
                         to_wipe.append(u)
             for u in to_wipe:
-                db['entries'] = [e for e in db['entries'] if e.get('user_id') != u['id']]
+                confirmed_at = u.get('data_wipe_confirmed_at')
+                if confirmed_at:
+                    # Convert confirmed_at ISO string to milliseconds timestamp
+                    # Handle 'Z' if present
+                    dt = datetime.datetime.fromisoformat(confirmed_at.replace('Z', '+00:00'))
+                    cutoff_ms = dt.timestamp() * 1000
+                    db['entries'] = [e for e in db['entries'] if not (e.get('user_id') == u['id'] and e.get('id', 0) < cutoff_ms)]
+                else:
+                    # Fallback: delete all if no confirmed_at (shouldn't happen with new logic)
+                    db['entries'] = [e for e in db['entries'] if e.get('user_id') != u['id']]
+                
                 u['data_wipe_scheduled'] = False
                 u['data_wipe_date'] = None
+                u['data_wipe_confirmed_at'] = None
 
             if to_delete or to_wipe:
                 save_json_db(db)
@@ -683,12 +703,15 @@ def run_cleanup():
                     cur.execute("DELETE FROM users WHERE id=%s", (row['id'],))
                     if row.get('email'):
                         _send_deleted_email(row['email'], row['username'])
-                # Data wipes
-                cur.execute("SELECT id FROM users WHERE data_wipe_scheduled=TRUE AND data_wipe_date < NOW()")
+                # Data wipes - only delete entries created BEFORE the wipe was confirmed
+                cur.execute("SELECT id, data_wipe_confirmed_at FROM users WHERE data_wipe_scheduled=TRUE AND data_wipe_date < NOW()")
                 wipe_rows = cur.fetchall()
                 for row in wipe_rows:
-                    cur.execute("DELETE FROM entries WHERE user_id=%s", (row['id'],))
-                    cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL WHERE id=%s", (row['id'],))
+                    if row['data_wipe_confirmed_at']:
+                        cur.execute("DELETE FROM entries WHERE user_id=%s AND created_at < %s", (row['id'], row['data_wipe_confirmed_at']))
+                    else:
+                        cur.execute("DELETE FROM entries WHERE user_id=%s", (row['id'],))
+                    cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL, data_wipe_confirmed_at=NULL WHERE id=%s", (row['id'],))
                 
                 conn.commit()
                 cur.close()
@@ -914,21 +937,24 @@ def data_wipe_confirm():
         return jsonify({"error": "Invalid or expired OTP"}), 400
     del otp_store[email]
 
-    wipe_date = (datetime.datetime.utcnow() + datetime.timedelta(days=5)).isoformat()
+    now_utc = datetime.datetime.utcnow()
+    wipe_date = (now_utc + datetime.timedelta(days=5)).isoformat()
+    confirmed_at = now_utc.isoformat()
 
     if not DATABASE_URL:
         for u in db['users']:
             if u['id'] == current_user.id:
                 u['data_wipe_scheduled'] = True
                 u['data_wipe_date'] = wipe_date
+                u['data_wipe_confirmed_at'] = confirmed_at
         save_json_db(db)
     else:
         conn = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
-            cur.execute("UPDATE users SET data_wipe_scheduled=TRUE, data_wipe_date=%s WHERE id=%s",
-                        (wipe_date, current_user.id))
+            cur.execute("UPDATE users SET data_wipe_scheduled=TRUE, data_wipe_date=%s, data_wipe_confirmed_at=%s WHERE id=%s",
+                        (wipe_date, confirmed_at, current_user.id))
             conn.commit()
             cur.close()
         finally:
@@ -946,13 +972,14 @@ def data_wipe_restore():
             if u['id'] == current_user.id:
                 u['data_wipe_scheduled'] = False
                 u['data_wipe_date'] = None
+                u['data_wipe_confirmed_at'] = None
         save_json_db(db)
     else:
         conn = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
-            cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL WHERE id=%s", (current_user.id,))
+            cur.execute("UPDATE users SET data_wipe_scheduled=FALSE, data_wipe_date=NULL, data_wipe_confirmed_at=NULL WHERE id=%s", (current_user.id,))
             conn.commit()
             cur.close()
         finally:

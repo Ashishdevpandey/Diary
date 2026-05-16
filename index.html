@@ -217,16 +217,6 @@
     </button>
   </div>
   <div id="entriesList" class="entries-list"></div>
-  <div id="restoreDataBanner" class="restore-banner">
-    <div class="rb-content">
-      <div class="rb-icon">⏳</div>
-      <h3>Data Wipe Scheduled</h3>
-      <p>Your diary entries are currently hidden and scheduled for permanent deletion.</p>
-      <div id="wipeCountdown" class="rb-date"></div>
-      <button class="mbtn-save" onclick="restoreWipedData()" style="width: 100%; margin-top: 15px;">✨ Restore My Data</button>
-    </div>
-  </div>
-  <button class="fab" onclick="openNewEntry()" title="New Entry">＋</button>
   <button class="fab" onclick="openNewEntry()" title="New Entry">＋</button>
 </section>
 
@@ -373,6 +363,16 @@
     </div>
     <div style="margin-bottom: 10px; padding-top: 10px; border-top: 1px solid var(--border2);">
       <label class="mlabel" style="display:block; margin-bottom: 10px; font-weight: 600;">Data Management</label>
+
+      <div id="restoreWipeSection" style="display:none; margin-bottom: 15px; padding: 12px; background: rgba(39, 174, 96, 0.1); border: 1px solid rgba(39, 174, 96, 0.3); border-radius: 8px; text-align: left;">
+        <p style="font-size: 12px; color: var(--ink); margin-bottom: 10px; line-height: 1.4;">
+          <strong>Data Wipe Active:</strong> Old entries are hidden. Deletion scheduled.
+        </p>
+        <button class="mbtn-ghost" onclick="restoreWipedData()" style="width: 100%; border-color: #27ae60; color: #27ae60; font-size: 12px; padding: 6px;">
+          ✨ Restore Old Entries
+        </button>
+      </div>
+
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <button class="mbtn-ghost" onclick="exportData()">📥 Export as PDF</button>
         <button class="mbtn-ghost" onclick="openWipeData()" style="color: #a33; border-color: #ecc;">🗑️ Wipe All Data</button>

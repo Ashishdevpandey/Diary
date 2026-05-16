@@ -128,28 +128,20 @@ async function initApp(welcomedBack = false) {
   calYear = now.getFullYear();
   calMonth = now.getMonth();
 
-  if (currentUser.data_wipe_scheduled) {
-    document.getElementById("restoreDataBanner").style.display = "block";
-    const wipeDate = new Date(currentUser.data_wipe_date);
-    document.getElementById("wipeCountdown").innerText = `Scheduled for permanent deletion on: ${wipeDate.toLocaleDateString()} at ${wipeDate.toLocaleTimeString()}`;
-    showEmpty();
-  } else {
-    document.getElementById("restoreDataBanner").style.display = "none";
-    await loadEntries();
-    
-    renderCalendar();
-    renderMoodChart();
-    renderStreak();
-    renderTagCloud();
-    renderMemories();
+  await loadEntries();
+  
+  renderCalendar();
+  renderMoodChart();
+  renderStreak();
+  renderTagCloud();
+  renderMemories();
 
-    if (entries.length > 0 && window.innerWidth > 900) {
-      selectEntry(entries[0].id);
-    } else if (entries.length > 0) {
-      showWelcome();
-    } else {
-      showEmpty();
-    }
+  if (entries.length > 0 && window.innerWidth > 900) {
+    selectEntry(entries[0].id);
+  } else if (entries.length > 0) {
+    showWelcome();
+  } else {
+    showEmpty();
   }
 
   if (welcomedBack) {
@@ -165,15 +157,16 @@ function showAuth() {
 }
 
 async function loadEntries() {
-  if (currentUser.data_wipe_scheduled) {
-    entries = [];
-    renderList();
-    return;
-  }
   try {
     const res = await fetch('/api/entries');
     if (res.status === 401) return showAuth();
-    const rawEntries = await res.json();
+    let rawEntries = await res.json();
+    
+    // If wipe scheduled, filter out entries created before wipe confirmation
+    if (currentUser.data_wipe_scheduled && currentUser.data_wipe_confirmed_at) {
+      const cutoff = new Date(currentUser.data_wipe_confirmed_at).getTime();
+      rawEntries = rawEntries.filter(e => e.id >= cutoff);
+    }
     
     // Decrypt all entries
     entries = await Promise.all(rawEntries.map(async e => ({
@@ -859,7 +852,13 @@ function closeSidebar() {
   document.getElementById("sidebarOverlay").classList.remove("open");
 }
 
-function openSettings() { document.getElementById("settingsModal").classList.add("open"); }
+function openSettings() {
+  const restoreSec = document.getElementById("restoreWipeSection");
+  if (restoreSec) {
+    restoreSec.style.display = currentUser.data_wipe_scheduled ? "block" : "none";
+  }
+  document.getElementById("settingsModal").classList.add("open");
+}
 function closeSettings() { document.getElementById("settingsModal").classList.remove("open"); }
 
 function updateFontSize(val) {
@@ -1416,6 +1415,7 @@ async function confirmWipe() {
     if (res.ok) {
       currentUser.data_wipe_scheduled = true;
       currentUser.data_wipe_date = data.data_wipe_date;
+      currentUser.data_wipe_confirmed_at = new Date().toISOString(); // Local sync
       closeWipeData();
       initApp();
     } else {
@@ -1432,6 +1432,8 @@ async function restoreWipedData() {
     if (res.ok) {
       currentUser.data_wipe_scheduled = false;
       currentUser.data_wipe_date = null;
+      currentUser.data_wipe_confirmed_at = null;
+      closeSettings();
       initApp();
     } else {
       alert("Failed to restore data.");
