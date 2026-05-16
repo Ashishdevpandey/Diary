@@ -1582,3 +1582,101 @@ body.theme-dark .otp-box {
 body.theme-dark .otp-box:focus {
   background: rgba(40, 30, 20, 0.8);
 }
+
+/* ─── MIDNIGHT DARK THEME OVERRIDES ─────────────────────── */
+body.theme-dark {
+  /* paper tones */
+  --p0: #1a1714;
+  --p1: #1e1a17;
+  --p2: #161310;
+  --p3: #221e1a;
+
+  /* ink tones */
+  --ink: #e0d8c8;
+  --ink2: #b8ac98;
+  --ink3: #8a7c68;
+  --muted: #857a66;
+  --border: #3a3228;
+  --border2: #2a221a;
+
+  /* accents */
+  --acc: #8a6540;
+  --acc2: #a57c52;
+  --green: #687a4a;
+}
+
+body.theme-dark .entries-panel {
+  background: rgba(30, 26, 23, 0.75);
+  background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(138, 101, 64, 0.08) 27px, rgba(138, 101, 64, 0.08) 28px);
+}
+
+body.theme-dark .entry-view {
+  background: rgba(26, 23, 20, 0.8);
+  background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(138, 101, 64, 0.06) 31px, rgba(138, 101, 64, 0.06) 32px);
+}
+
+body.theme-dark .entry-view::before {
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 55px, rgba(138, 101, 64, 0.15) 55px, rgba(138, 101, 64, 0.15) 57px, transparent 57px, transparent 75px);
+}
+
+body.theme-dark .right-panel {
+  background: rgba(22, 19, 16, 0.75);
+  background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(138, 101, 64, 0.06) 27px, rgba(138, 101, 64, 0.06) 28px);
+}
+
+body.theme-dark .ecard {
+  background: rgba(34, 30, 26, 0.55);
+}
+
+body.theme-dark .ecard:hover {
+  background: rgba(34, 30, 26, 0.9);
+}
+
+body.theme-dark .ecard.sel {
+  background: rgba(42, 34, 28, 0.95);
+}
+
+body.theme-dark .vtool-btn,
+body.theme-dark .vmood,
+body.theme-dark .mfield {
+  background: rgba(40, 35, 30, 0.6);
+}
+
+body.theme-dark .vtool-btn:hover,
+body.theme-dark .vmood:hover,
+body.theme-dark .mfield:focus {
+  background: rgba(50, 45, 40, 0.9);
+}
+
+body.theme-dark .vmood.active {
+  background: rgba(138, 101, 64, 0.2);
+}
+
+body.theme-dark .view-notes {
+  background: rgba(34, 30, 26, 0.7);
+}
+
+body.theme-dark .view-tag,
+body.theme-dark .tpill {
+  background: rgba(138, 101, 64, 0.15);
+}
+
+body.theme-dark .btn-menu:hover,
+body.theme-dark .cday:hover,
+body.theme-dark .nav-item:hover,
+body.theme-dark .mbtn-ghost:hover {
+  background: rgba(138, 101, 64, 0.15);
+}
+
+body.theme-dark .modal,
+body.theme-dark .sidebar-quote {
+  background: #1a1714;
+}
+
+body.theme-dark .sres-item:hover {
+  background: rgba(138, 101, 64, 0.15);
+}
+
+body.theme-dark .rcard {
+  background: rgba(34, 30, 26, 0.6);
+}

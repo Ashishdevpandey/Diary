@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
+        body {
+            background-color: #f0f0f0;
+            padding: 40px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .preview-section {
+            margin-bottom: 60px;
+            border-bottom: 2px dashed #ccc;
+            padding-bottom: 40px;
+        }
+        .section-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .email-container {
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        img {
+            max-width: 150px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Signup OTP -->
+    <div class="preview-section">
+        <div class="section-title">1. Signup OTP (Mail.png)</div>
+        <div class="email-container">
+            <div style="font-family: 'Lora', serif; padding: 20px; background: #f7f0df; border: 1px solid #c8a870; border-radius: 10px; color: #2e1f0d;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="../Mail.png" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+                    <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
+                </div>
+                <p>Hello <b>User</b>,</p>
+                <p>Your One-Time Password (OTP) for <b>signup</b> is:</p>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #6b4c2a; margin: 20px 0; text-align: center; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 5px;">
+                    123456
+                </div>
+                <p>This code will expire in 5 minutes.</p>
+                <p style="font-size: 12px; color: #a07840;">If you didn't request this, please ignore this email.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Password Reset -->
+    <div class="preview-section">
+        <div class="section-title">2. Password Reset (change pswd.png)</div>
+        <div class="email-container">
+            <div style="font-family: 'Lora', serif; padding: 20px; background: #f7f0df; border: 1px solid #c8a870; border-radius: 10px; color: #2e1f0d;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="../change pswd.png" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+                    <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
+                </div>
+                <p>Hello <b>User</b>,</p>
+                <p>You requested to reset your password. Use the following code:</p>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #6b4c2a; margin: 20px 0; text-align: center; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 5px;">
+                    654321
+                </div>
+                <p>This code will expire in 5 minutes.</p>
+                <p style="font-size: 12px; color: #a07840;">If you didn't request this, please ignore this email.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Deletion OTP Request -->
+    <div class="preview-section">
+        <div class="section-title">3. Deletion OTP Request (Deletion request.png)</div>
+        <div class="email-container">
+            <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="../Deletion request.png" alt="Ink & Impressions" style="max-width: 120px; border-radius: 8px; margin-right: 15px;">
+                    <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
+                </div>
+                <p>Hello <b>User</b>,</p>
+                <p>We received a request to <b>delete your account</b>. If this was you, use the code below:</p>
+                <div style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#6b4c2a;text-align:center;background:rgba(255,255,255,0.5);padding:12px;border-radius:8px;margin:20px 0;">987654</div>
+                <p>This code expires in 5 minutes.</p>
+                <p style="font-size:12px;color:#a07840;">If you didn't request this, please ignore this email. Your account is safe.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Farewell (Scheduled for deletion) -->
+    <div class="preview-section">
+        <div class="section-title">4. Farewell / Scheduled (Deletion request.png)</div>
+        <div class="email-container">
+            <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="../Deletion request.png" alt="Ink & Impressions" style="max-width: 120px; border-radius: 8px; margin-right: 15px;">
+                    <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
+                </div>
+                <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
+                <p style="font-size:18px;">Hey <b>User</b>,</p>
+                <p>It's heartbreaking to let you go. 💔</p>
+                <p>We've marked your account for deletion. But life is full of second chances —
+                   if you change your mind, just log back in within <b>14 days</b> and your diary
+                   will be right here, exactly as you left it.</p>
+                <p style="font-size:13px;color:#a07840;margin-top:24px;">
+                  After 14 days, your account and all your entries will be permanently erased.
+                </p>
+                <p style="margin-top:24px;">Until then, we'll keep your words safe. 🪶</p>
+                <p style="color:#6b4c2a;font-style:italic;">— The Ink & Impressions Team</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Welcome Back -->
+    <div class="preview-section">
+        <div class="section-title">5. Welcome Back (Welcome back.png)</div>
+        <div class="email-container">
+            <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="../Welcome back.png" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+                    <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
+                </div>
+                <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
+                <p style="font-size:20px;">Welcome back, <b>User</b>! 🥹</p>
+                <p>We never stopped believing you'd return. Your diary, your memories, your words —
+                   they've been waiting for you.</p>
+                <p>Your account deletion has been cancelled. Everything is just as you left it. 🪶</p>
+                <p style="margin-top:24px;font-style:italic;color:#6b4c2a;">
+                  We're so glad you're back. ❤️
+                </p>
+                <p style="color:#6b4c2a;font-style:italic;">— The Ink & Impressions Team</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Account Deleted -->
+    <div class="preview-section">
+        <div class="section-title">6. Account Deleted (Farewell.png)</div>
+        <div class="email-container">
+            <div style="font-family:'Lora',serif;padding:30px;background:#f7f0df;border:1px solid #c8a870;border-radius:12px;color:#2e1f0d;max-width:480px;margin:auto;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <img src="../Farewell.png" alt="Ink & Impressions" style="max-width: 80px; border-radius: 8px; margin-right: 15px;">
+                    <h2 style="color: #6b4c2a; margin: 0;">Ink & Impressions</h2>
+                </div>
+                <hr style="border:none;border-top:1px solid #d5c090;margin-bottom:20px;">
+                <p>Dear <b>User</b>,</p>
+                <p>Your account and all associated diary entries have been permanently deleted, as requested.</p>
+                <p>We hope your words brought you peace while they lasted. If you ever feel the urge to write again,
+                   you're always welcome to create a new account.</p>
+                <p style="margin-top:24px;font-style:italic;color:#6b4c2a;">Take care. 🪶</p>
+                <p style="color:#6b4c2a;font-style:italic;">— The Ink & Impressions Team</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
