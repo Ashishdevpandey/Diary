@@ -654,7 +654,7 @@ def _send_data_wipe_email(email, username, date_str):
       <p style="margin-top:24px;font-style:italic;color:#6b4c2a;">Take care. 🪶</p>
     </div>
     """
-    send_email(email, subject, body, image_filename='Mail.png')
+    send_email(email, subject, body, image_filename='Deletion request.png')
 
 def _send_restore_confirmation_email(email, username):
     subject = "Your data has been successfully restored — Ink & Impressions"
@@ -670,7 +670,7 @@ def _send_restore_confirmation_email(email, username):
       <p style="margin-top:24px;font-style:italic;color:#28a745;">Happy writing! 🪶</p>
     </div>
     """
-    send_email(email, subject, body, image_filename='Mail.png')
+    send_email(email, subject, body, image_filename='Welcome back.png')
 
 def run_cleanup():
     """Performs the 14-day grace period cleanup once. 
